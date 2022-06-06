@@ -1,0 +1,157 @@
+$ ID     NMODE,JPC                                                              18
+ID NMODE, CHECK1                                                                16
+SOL    103                                                                      10
+TIME   50                                                                       9
+$diag 8,20,56                                                                   13
+CEND                                                                            4
+TITLE = NORMAL MODES COLD START                                             CHEC80
+DISP = ALL                                                                      10
+SPC = 1                                                                         7
+SUBCASE 1                                                                       9
+  SUPER =1                                                                      10
+SUBCASE 2                                                                       9
+  SUPER = 2                                                                     11
+  METHOD = 10                                                                   13
+SUBCASE 3                                                                       9
+  METHOD = 10                                                                   13
+BEGIN BULK                                                                      10
+param,grdpnt,0                                                                  14
+$                                                                               1
+$ PARAMETERS TO CONTROL THE DMAP ALTER                                          38
+$                                                                               1
+PARAM   KEPRT   1                                                               17
+PARAM   EFWGT   2                                                               17
+PARAM   CHKSTIF 1                                                               17
+PARAM   CHKMASS 1                                                               17
+$                                                                               1
+$ SOLVE FOR 12 MODES                                                            20
+$                                                                               1
+EIGRL   10                      12                                              34
+$                                                                               1
+$ DOF FOR COMPONENT MODES                                                       25
+$                                                                               1
+SPOINT  101     THRU    124                                                     27
+SEQSET1 1       0       101     THRU     112                                    44
+SEQSET1 2       0       113     THRU     124                                    44
+$                                                                               1
+PARAM   AUTOSPC YES                                                             19
+$                                                                               1
+$ THIS SECTION CONTAINS BULK DATA FOR SE 0                                      42
+$                                                                               1
+$                                                                               1
+GRID    9               4.      0.0     0.0                                     43
+GRID    10              4.5     0.0     0.0                                     43
+GRID    11              5.      0.0     0.0                                     43
+GRID    28              4.      .5      0.0                                     43
+GRID    29              4.5     .5      0.0                                     43
+GRID    30              5.      .5      0.0                                     43
+GRID    47              4.      1.      0.0                                     43
+GRID    48              4.5     1.      0.0                                     43
+GRID    49              5.      1.      0.0                                     43
+SPC1    1       456     10      29      48                                      42
+$                                                                               1
+CQUAD4  8       1       8       9       28      27                              50
+CQUAD4  9       1       9       10      29      28                              50
+CQUAD4  10      1       10      11      30      29                              50
+CQUAD4  11      1       11      12      31      30                              50
+CQUAD4  26      1       27      28      47      46                              50
+CQUAD4  27      1       28      29      48      47                              50
+CQUAD4  28      1       29      30      49      48                              50
+CQUAD4  29      1       30      31      50      49                              50
+$                                                                               1
+$                                                                               1
+$ THIS SECTION CONTAINS BULK DATA FOR SE 1                                      42
+$                                                                               1
+$                                                                               1
+GRID    1               0.0     0.0     0.0                     1               65
+GRID    2               .5      0.0     0.0                     1               65
+GRID    3               1.      0.0     0.0                     1               65
+GRID    4               1.5     0.0     0.0                     1               65
+GRID    5               2.      0.0     0.0                     1               65
+GRID    6               2.5     0.0     0.0                     1               65
+GRID    7               3.      0.0     0.0                     1               65
+GRID    8               3.5     0.0     0.0                     1               65
+GRID    20              0.0     .5      0.0                     1               65
+GRID    21              .5      .5      0.0                     1               65
+GRID    22              1.      .5      0.0                     1               65
+GRID    23              1.5     .5      0.0                     1               65
+GRID    24              2.      .5      0.0                     1               65
+GRID    25              2.5     .5      0.0                     1               65
+GRID    26              3.      .5      0.0                     1               65
+GRID    27              3.5     .5      0.0                     1               65
+GRID    39              0.0     1.      0.0                     1               65
+GRID    40              .5      1.      0.0                     1               65
+GRID    41              1.      1.      0.0                     1               65
+GRID    42              1.5     1.      0.0                     1               65
+GRID    43              2.      1.      0.0                     1               65
+GRID    44              2.5     1.      0.0                     1               65
+GRID    45              3.      1.      0.0                     1               65
+GRID    46              3.5     1.      0.0                     1               65
+GRID    98              1.5     .5      0.0                     1               65
+RBE2    198     98      123456  41      43      5       3                       57
+$                                                                               1
+CQUAD4  1       1       1       2       21      20                              50
+CQUAD4  2       1       2       3       22      21                              50
+CQUAD4  3       1       3       4       23      22                              50
+CQUAD4  4       1       4       5       24      23                              50
+CQUAD4  5       1       5       6       25      24                              50
+CQUAD4  6       1       6       7       26      25                              50
+CQUAD4  7       1       7       8       27      26                              50
+CQUAD4  19      1       20      21      40      39                              50
+CQUAD4  20      1       21      22      41      40                              50
+CQUAD4  21      1       22      23      42      41                              50
+CQUAD4  22      1       23      24      43      42                              50
+CQUAD4  23      1       24      25      44      43                              50
+CQUAD4  24      1       25      26      45      44                              50
+CQUAD4  25      1       26      27      46      45                              50
+$                                                                               1
+$                                                                               1
+$ THIS SECTION CONTAINS BULK DATA FOR SE 2                                      42
+$                                                                               1
+$                                                                               1
+GRID    12              5.5     0.0     0.0                     2               65
+GRID    13              6.      0.0     0.0                     2               65
+GRID    14              6.5     0.0     0.0                     2               65
+GRID    15              7.      0.0     0.0                     2               65
+GRID    16              7.5     0.0     0.0                     2               65
+GRID    17              8.      0.0     0.0                     2               65
+GRID    18              8.5     0.0     0.0                     2               65
+GRID    19              9.      0.0     0.0                     2               65
+GRID    31              5.5     .5      0.0                     2               65
+GRID    32              6.      .5      0.0                     2               65
+GRID    33              6.5     .5      0.0                     2               65
+GRID    34              7.      .5      0.0                     2               65
+GRID    35              7.5     .5      0.0                     2               65
+GRID    36              8.      .5      0.0                     2               65
+GRID    37              8.5     .5      0.0                     2               65
+GRID    38              9.      .5      0.0                     2               65
+GRID    50              5.5     1.      0.0                     2               65
+GRID    51              6.      1.      0.0                     2               65
+GRID    52              6.5     1.      0.0                     2               65
+GRID    53              7.      1.      0.0                     2               65
+GRID    54              7.5     1.      0.0                     2               65
+GRID    55              8.      1.      0.0                     2               65
+GRID    56              8.5     1.      0.0                     2               65
+GRID    57              9.      1.      0.0                     2               65
+GRID    99              7.5     .5      0.0                     2               65
+RBE3    199             99      123456  1.0     123     53      55              66
+        17      15                                                              18
+$                                                                               1
+CQUAD4  12      1       12      13      32      31                              50
+CQUAD4  13      1       13      14      33      32                              50
+CQUAD4  14      1       14      15      34      33                              50
+CQUAD4  15      1       15      16      35      34                              50
+CQUAD4  16      1       16      17      36      35                              50
+CQUAD4  17      1       17      18      37      36                              50
+CQUAD4  18      1       18      19      38      37                              50
+CQUAD4  30      1       31      32      51      50                              50
+CQUAD4  31      1       32      33      52      51                              50
+CQUAD4  32      1       33      34      53      52                              50
+CQUAD4  33      1       34      35      54      53                              50
+CQUAD4  34      1       35      36      55      54                              50
+CQUAD4  35      1       36      37      56      55                              50
+CQUAD4  36      1       37      38      57      56                              50
+$                                                                               1
+PSHELL  1       2       .1       2                                              34
+MAT1    2       3.+7            .3      .000743                                 47
+ENDDATA                                                                         7

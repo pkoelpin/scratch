@@ -4,7 +4,7 @@ SOL    103
 TIME   50
 $diag 8,20,56
 CEND
-TITLE = NORMAL MODES COLD START                                CHECK1
+TITLE = NORMAL MODES COLD START                                             CHECK1
 DISP = ALL
 SPC = 1
 SUBCASE 1
