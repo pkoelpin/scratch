@@ -1,0 +1,237 @@
+\t   09
+\n   10
+' '  20
+$    24
+*    2A
++    2B
+,    2C
+/    2F
+=    3D
+
+row counter
+col counter
+fld counter
+nc  (number of characters in the current field)
+
+FIND_DATA
+    \t     -> PRE_FIELD_SMALL_FIXED
+    \n     -> FIND_DATA
+    ' '    -> FIND_DATA
+    $      -> IN_COMMENT
+    *      -> IN_BCONT_LARGE
+    +      -> IN_BCONT_SMALL
+    ,      -> PRE_FIELD_SMALL_FREE
+    /      -> IN_CARD
+    =      -> IN_REPL
+    alpha  -> IN_CARD
+    else   -> ERROR
+    8col   -> PRE_FIELD_SMALL_FIXED
+
+IN_CARD
+    $          -> IN_COMMENT
+    \n         -> FIND_DATA
+    \t         -> PRE_FIELD_SMALL_FIXED
+    ,          -> PRE_FIELD_SMALL_FREE
+    ' '        -> POST_CARD_SMALL
+    *          -> POST_CARD_LARGE
+    * && 8col  -> PRE_FIELD_LARGE_FIXED
+    8col       -> PRE_FIELD_SMALL_FIXED
+
+IN_BCONT_SMALL
+    $     -> IN_COMMENT
+    \n    -> FIND_DATA
+    \t    -> PRE_FIELD_SMALL_FIXED
+    ,     -> PRE_FIELD_SMALL_FREE
+    ' '   -> POST_CARD_SMALL
+    8col  -> PRE_FIELD_SMALL_FIXED
+    
+IN_BCONT_LARGE
+    $     -> IN_COMMENT
+    \n    -> FIND_DATA
+    \t    -> PRE_FIELD_LARGE_FIXED
+    ,     -> PRE_FIELD_LARGE_FREE
+    ' '   -> POST_CARD_LARGE
+    8col  -> PRE_FIELD_LARGE_FIXED
+
+IN_REPL
+    $     -> IN_COMMENT
+    \n    -> FIND_DATA
+    \t    -> PRE_FIELD_SMALL_FIXED
+    ,     -> PRE_FIELD_SMALL_FREE
+    ' '   -> POST_CARD_SMALL
+    8col  -> PRE_FIELD_SMALL_FIXED
+
+POST_CARD_SMALL
+    $     -> IN_COMMENT
+    \n    -> FIND_DATA
+    \t    -> PRE_FIELD_SMALL_FIXED
+    ,     -> PRE_FIELD_SMALL_FREE
+    ' '   -> POST_CARD_SMALL
+    else  -> ERROR
+    8col  -> PRE_FIELD_SMALL_FIXED
+
+POST_CARD_LARGE
+    $     -> IN_COMMENT
+    \n    -> FIND_DATA
+    \t    -> PRE_FIELD_LARGE_FIXED
+    ,     -> PRE_FIELD_LARGE_FREE
+    ' '   -> POST_CARD_LARGE
+    else  -> ERROR
+    8col  -> PRE_FIELD_LARGE_FIXED
+
+PRE_FIELD_SMALL_FIXED
+    $          -> IN_COMMENT
+    \n         -> FIND_DATA
+    \t         -> PRE_FIELD_SMALL_FIXED
+    ' '        -> PRE_FIELD_SMALL_FIXED
+    ,          -> ERROR
+    else       -> IN_FIELD_SMALL_FIXED
+    8nc        -> PRE_FIELD_SMALL_FIXED
+    8nc && f9  -> PRE_CONT_END
+
+PRE_FIELD_SMALL_FREE
+    $       -> IN_COMMENT
+    \n      -> FIND_DATA
+    \t      -> PRE_FIELD_SMALL_FREE
+    ,       -> PRE_FIELD_SMALL_FREE
+    ' '     -> PRE_FIELD_SMALL_FREE
+    else    -> IN_FIELD_SMALL_FREE
+    80col   -> OUT_OF_BOUNDS
+
+PRE_FIELD_LARGE_FIXED
+    $          -> IN_COMMENT
+    \n         -> FIND_DATA
+    \t         -> PRE_FIELD_LARGE_FIXED
+    ' '        -> PRE_FIELD_LARGE_FIXED
+    ,          -> ERROR
+    else       -> IN_FIELD_LARGE_FIXED
+    16nc       -> PRE_FIELD_LARGE_FIXED
+    16nc && f5 -> PRE_CONT_END
+
+PRE_FIELD_LARGE_FREE
+    $       -> IN_COMMENT
+    \n      -> FIND_DATA
+    \t      -> PRE_FIELD_LARGE_FREE
+    ,       -> PRE_FIELD_LARGE_FREE
+    ' '     -> PRE_FIELD_LARGE_FREE
+    else    -> IN_FIELD_LARGE_FREE
+    80col   -> OUT_OF_BOUNDS
+
+IN_FIELD_SMALL_FIXED
+    $       -> IN_COMMENT
+    \n      -> FIND_DATA
+    \t      -> PRE_FIELD_SMALL_FIXED
+    ,       -> ERROR
+    ' '     -> POST_FIELD_SMALL_FIXED
+    8nc     -> PRE_FIELD_SMALL_FIXED
+    72col   -> PRE_ECONT
+    
+IN_FIELD_LARGE_FIXED
+    $       -> IN_COMMENT
+    \n      -> FIND_DATA
+    \t      -> PRE_FIELD_LARGE_FIXED
+    ,       -> ERROR
+    ' '     -> POST_FIELD_LARGE_FIXED
+    16nc    -> PRE_FIELD_LARGE_FIXED
+    72col   -> PRE_ECONT
+    
+IN_FIELD_SMALL_FREE
+    $       -> IN_COMMENT
+    \n      -> FIND_DATA
+    \t      -> POST_FIELD_SMALL_FREE
+    ' '     -> POST_FIELD_SMALL_FREE
+    ,       -> PRE_FIELD_SMALL_FREE
+    , && f9 -> PRE_ECONT
+    80col   -> OUT_OF_BOUNDS
+
+IN_FIELD_LARGE_FREE
+    $       -> IN_COMMENT
+    \n      -> FIND_DATA
+    \t      -> POST_FIELD_LARGE_FREE
+    ' '     -> POST_FIELD_LARGE_FREE
+    ,       -> PRE_FIELD_LARGE_FREE
+    , && f5 -> PRE_ECONT
+    80col   -> OUT_OF_BOUNDS
+
+POST_FIELD_SMALL_FIXED
+    \t      -> FIND_DATA
+    \n      -> FIND_DATA
+    $       -> IN_COMMENT
+    8nc     -> PRE_FIELD_SMALL_FIXED
+    72col   -> PRE_ECONT
+
+POST_FIELD_LARGE_FIXED
+    \t      -> FIND_DATA
+    \n      -> FIND_DATA
+    $       -> IN_COMMENT
+    16nc     -> PRE_FIELD_SMALL_FIXED
+    72col   -> PRE_ECONT
+
+PRE_ECONT
+    \t      -> FIND_DATA
+    \n      -> FIND_DATA
+    ' '     -> PRE_ECONT
+    $       -> IN_COMMENT
+    *       -> IN_ECONT
+    +       -> IN_ECONT
+    else    -> ERROR
+    80col   -> OUT_OF_BOUNDS
+
+IN_ECONT
+    \t      -> FIND_DATA
+    \n      -> FIND_DATA
+    ' '     -> FIND_DATA
+    $       -> IN_COMMENT
+    80col   -> OUT_OF_BOUNDS
+
+IN_COMMENT
+    \n   -> FIND_DATA
+    
+OUT_OF_BOUNDS
+    \n   ->  FIND_DATA
+
+ENDDATA
+    
+FIND_BEGIN_DESC
+    \n     -> ERROR
+    ' '    -> FIND_BEGIN_DESC
+    alpha  -> IN_BEGIN_DESC
+    else   -> ERROR
+    
+IN_BEGIN_DESC
+    \t     -> POST_BEGIN_DESC
+    \n     -> FIND_DATA
+    ' '    -> POST_BEGIN_DESC
+    $      -> IN_COMMENT
+    
+POST_BEGIN_DESC
+    \n     -> FIND_DATA
+    $      -> IN_COMMENT
+    =      -> FIND_BEGIN_ID
+    80col   -> OUT_OF_BOUNDS
+    
+FIND_BEGIN_ID
+    ' '    -> FIND_BEGIN_ID
+    num    -> IN_BEGIN_ID
+    else   -> ERROR
+    
+IN_BEGIN_ID
+    \t     -> POST_BEGIN_ID
+    \n     -> FIND_DATA
+    $      -> IN_COMMENT
+    
+POST_BEGIN_ID
+    \t     -> FIND_DATA
+    \n     -> FIND_DATA
+    $      -> IN_COMMENT
+    
+FIND_INCLUDE_PATH
+    \n     -> ERROR
+    '      -> IN_INCLUDE_PATH
+    
+IN_INCLUDE_PATH
+    '      -> FIND_DATA
+    
+
+
+https://stackoverflow.com/questions/40539418/what-is-the-best-way-to-write-a-syntax-tokenizer-parser-in-c
