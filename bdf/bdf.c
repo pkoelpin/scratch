@@ -2,54 +2,76 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #define LINE_LENGTH 80
 
-struct buf {
-    size_t max_size;
-    int64_t len;
-    char buf[];
-};
+typedef enum {
+    TOK_CARD,
+    TOK_INTEGER,
+    TOK_REAL,
+    TOK_CHARACTER,
+    TOK_PATH,
+    TOK_BLANK,
+    TOK_SCONT,
+    TOK_ECONT,
+    TOK_EOF
+} TokenType;
 
-int32_t buf_push(struct buf *b, char *s)
-{
-    int32_t off = b->len;
-    int32_t len = strlen(s);
-    if (b->len+len > BUF_MAX) {
-        return -1;  // out of memory
-    }
-    memcpy(b->buf+off, s, len*sizeof(*s));
-    b->len += len;
-    return len<<22 | off;
-}
+typedef union {
+    uint64_t i;
+    char s[8];
+} CardID;
+
+typedef struct {
+    TokenType type;
+    union {
+        CardID id;
+        uint64_t i;
+        double r;
+        char c[8];
+        char *p;
+    } val;
+    char *file;
+    uint32_t line;
+    uint8_t scol;
+    uint8_t ecol;
+} Token;
+
+typedef struct {
+    enum {
+        STATE_FIND_DATA,
+        STATE_IN_CARD,
+        STATE_IN_COMMENT
+    } state;
+    char token[8];
+    char *file;
+    uint32_t line;
+    uint8_t scol;
+    uint8_t ecol;
+    uint8_t field;
+} State;
+
+void fsm(State *state, char c);
+
+void bdftok(FILE *stream, Token *tok, size_t len);
 
 int main() {
+    
     static const char bdf_file[] = "./test/test1.dat";
     FILE* bdf;
-    FILE* ofile;
-
     bdf = fopen(bdf_file, "r");
-    ofile = fopen("./test/ofile.dat", "w");
-
-    if (!bdf) {
-        perror(bdf_file);
-        exit(EXIT_FAILURE);
-    }
-
-    char line[LINE_LENGTH+1];
-    while (fgets(line, sizeof(line), bdf)) {
-        if ( strchr(line, '\n') == NULL) {
-            int c;
-            while ((c = fgetc(bdf)) != EOF && c != '\n'){}
-        }
-        /* trim the trailing newline */
-        line[strcspn(line, "\n")] = 0;
-        fprintf(ofile, "%-80s%d\n", line, strlen(line));
-    }
 
     fclose(bdf);
-    fclose(ofile);
 
+    CardID tmp;
+    //tmp.i = 0x0000344441555143;
+    tmp.i = 0;
+    strncpy(tmp.s, "C", 1);
+
+    printf("%.8s\n", tmp.s);
+    printf("0x%016" PRIx64 "\n", tmp.i);
+    printf("%d\n", sizeof(size_t));
 
     return 0;
 }
