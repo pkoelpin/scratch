@@ -5,6 +5,8 @@
 #include <inttypes.h>
 
 #define LINE_LENGTH 80
+#define BUFFSIZE 4096
+#define STACKSIZE 10
 
 typedef enum {
     TOK_CARD,
@@ -38,23 +40,36 @@ typedef struct {
     uint8_t ecol;
 } Token;
 
-typedef struct {
-    enum {
-        STATE_FIND_DATA,
-        STATE_IN_CARD,
-        STATE_IN_COMMENT
-    } state;
-    char token[8];
-    char *file;
-    uint32_t line;
-    uint8_t scol;
-    uint8_t ecol;
-    uint8_t field;
+typedef enum {
+    STATE_FIND_DATA,
+    STATE_IN_CARD,
+    STATE_IN_COMMENT
 } State;
 
-void fsm(State *state, char c);
+typedef struct {
+    FILE *stream;
+    char buf1[BUFFSIZE+1];
+    char buf2[BUFFSIZE+1];
+    uint32_t line;
+    uint32_t col;
+    char *beg;
+    char *end;
+} BDF;
 
-void bdftok(FILE *stream, Token *tok, size_t len);
+typedef struct {
+    size_t n;
+    BDF stack[STACKSIZE];
+    State state;
+} Tokenizer;
+
+void tok_init(Tokenizer *tok, FILE *stream){
+    tok->n = 1;
+    tok->stack[0] 
+}
+
+//void fsm(State *state, char c);
+
+void tokenize(FILE *stream, Token *tok, size_t len);
 
 int main() {
     
@@ -71,7 +86,7 @@ int main() {
 
     printf("%.8s\n", tmp.s);
     printf("0x%016" PRIx64 "\n", tmp.i);
-    printf("%d\n", sizeof(size_t));
+    printf("%d\n", sizeof(BDF));
 
     return 0;
 }
