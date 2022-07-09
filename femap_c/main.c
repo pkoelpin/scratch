@@ -1,10 +1,18 @@
+#include <stdbool.h>
 #include <windows.h>
 #include <combaseapi.h>
 #include <unknwn.h>
+#include "lcpick.h"
 
 const char g_szClassName[] = "myWindowClass";
 HWND hwnd_listbox;
 HWND hwnd_edit;
+HWND hwnd_button;
+
+static h_lcpick lcpick;
+static size_t lc_count;
+static uint32_t *lcid;
+static char **desc;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -27,9 +35,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 WS_CHILD | WS_VISIBLE | WS_BORDER,
                 7, 7, 300, 20, 
                 hwnd, NULL, hInstance, NULL);
+            hwnd_button = CreateWindowExW(
+                0, 
+                L"BUTTON", 
+                L"Select Active Conditions", 
+                WS_CHILD | WS_VISIBLE,
+                7, 300, 300, 35, 
+                hwnd, NULL, hInstance, NULL);
             SetFocus(hwnd_edit);
             break;
         }
+        case WM_COMMAND:
+            if ((int)lParam == hwnd_button) {
+                HINSTANCE hInstance = GetModuleHandle(NULL);
+                h_lcpick lcpick = lcpick_create(hwnd);
+                lcpick_set_cond(lcpick, lc_count, lcid, desc);
+                EnableWindow(hwnd_button, false);
+            }
         case WM_SIZING:
             break;
         case WM_CLOSE:
@@ -37,6 +59,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
+            break;
+        case WM_NOTIFY:
+            MessageBeep(MB_OK);
             break;
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -71,10 +96,26 @@ void femap_connect()
     hr = grpDisp->lpVtbl->GetIDsOfNames(grpDisp, &IID_NULL, &rgszNames, 1, LOCALE_USER_DEFAULT, &dispid);
 }
 
+void test_lc()
+{
+    lc_count = 30;
+    lcid = malloc(lc_count*sizeof(*lcid));
+    desc = malloc(lc_count * sizeof(char*));
+
+    for (int i = 0; i < lc_count; i++){
+        lcid[i] = i*1000;
+        desc[i] = malloc(256);
+        sprintf(desc[i], "SUBCASE %d", i);
+    }
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     /* First we will try to connect to a femap model */
     femap_connect();
+
+    /* populate a test load case */
+    test_lc();
 
     WNDCLASSEX wc;
     HWND hwnd;
@@ -106,7 +147,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         "Group Filter",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 500, 500,
-        NULL, NULL, hInstance, NULL);
+        NULL, NULL, hInstance, NULL
+    );
 
     if(hwnd == NULL)
     {
