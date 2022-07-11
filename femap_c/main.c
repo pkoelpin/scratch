@@ -98,7 +98,7 @@ void femap_connect()
 
 void test_lc()
 {
-    lc_count = 30;
+    lc_count = 50000;
     lcid = malloc(lc_count*sizeof(*lcid));
     desc = malloc(lc_count * sizeof(char*));
 

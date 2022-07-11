@@ -3,7 +3,7 @@
 CC      = gcc
 CFLAGS  = -std=c99 -ffast-math -Os -Wall -Wextra -Wdouble-promotion
 LDFLAGS = 
-LDLIBS  = -lole32 -loleaut32 -luuid -lcomctl32
+LDLIBS  = -lole32 -loleaut32 -luuid -lcomctl32 -luxtheme
 
 all: filter.exe
 
