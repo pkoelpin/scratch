@@ -19,12 +19,16 @@
 
  Select all in list view
  https://stackoverflow.com/questions/9039989/how-to-selectall-in-a-winforms-virtual-listview
-*/
 
-#include <stdbool.h>
+ UX Guide
+ https://docs.microsoft.com/en-us/windows/win32/uxguide/ctrl-drop
+*/
+#define _WIN32_WINNT 0x0600
+#define _WIN32_IE 0x0900
 #include <windows.h>
 #include <commctrl.h> 
 #include <Uxtheme.h>
+#include <stdbool.h>
 #include "lcpick.h"
 
 #define LCPICK_CLASS "LCPICK_CLASS"
@@ -55,12 +59,22 @@ void lcpick_set_cond(h_lcpick lcpick, size_t count, uint32_t *lcid, char **desc)
     ListView_SetItemCount(lcpick->hwnd_listview, count);
 }
 
-static void create_listview(HWND hwnd){
+static void create_combobox(HWND hwnd)
+{
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
-    INITCOMMONCONTROLSEX icex;
-    icex.dwICC = ICC_LISTVIEW_CLASSES;
-    InitCommonControlsEx(&icex);
+    HWND hWndComboBox = CreateWindow(
+        WC_COMBOBOX, 
+        L"", 
+        CBS_DROPDOWNLIST | WS_CHILD  | WS_VISIBLE,
+        7, 7, 50, 50, 
+        hwnd, NULL, hInstance,
+        NULL
+    );
+}
+
+static void create_listview(HWND hwnd){
+    HINSTANCE hInstance = GetModuleHandle(NULL);
 
     RECT rcClient;
     GetClientRect (hwnd, &rcClient); 
@@ -70,14 +84,11 @@ static void create_listview(HWND hwnd){
     HWND hwnd_listview = CreateWindow(
         WC_LISTVIEW, 
         L"",
-        WS_CHILD | LVS_REPORT  | WS_VISIBLE | LVS_OWNERDATA | WS_BORDER ,
-        7, 7,
+        WS_CHILD | LVS_REPORT  | WS_VISIBLE | LVS_OWNERDATA | WS_BORDER,
+        7, 37,
         rcClient.right - rcClient.left - 14,
         rcClient.bottom - rcClient.top - 14,
-        hwnd,
-        NULL,
-        hInstance,
-        NULL
+        hwnd, NULL, hInstance, NULL
     ); 
 
     ListView_SetExtendedListViewStyleEx(hwnd_listview, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
@@ -118,7 +129,6 @@ LRESULT lcpick_notify(HWND hwnd, LPARAM lParam)
         }
         return 0;
     }
-
     return 0;
 }
 
@@ -131,11 +141,13 @@ static LRESULT CALLBACK lcpick_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             h_lcpick lcpick = pCreate->lpCreateParams;
             SetWindowLongPtr(hwnd, GWLP_USERDATA, lcpick);
             create_listview(hwnd);
+            create_combobox(hwnd);
             break;
         case WM_NOTIFY:
             return lcpick_notify(hwnd, lParam);
         case WM_SIZING:
             //SendMessage(GetWindow(hwnd, GW_OWNER), WM_NOTIFY, NULL, NULL);
+
             break;
         case WM_CLOSE:
             DestroyWindow(hwnd);
@@ -170,6 +182,11 @@ static int lcpick_register(){
 
 h_lcpick lcpick_create(HWND hwnd)
 {
+    INITCOMMONCONTROLSEX icex;
+	icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	icex.dwICC = ICC_STANDARD_CLASSES;
+	InitCommonControlsEx(&icex);
+
     h_lcpick lcpick = malloc(sizeof(struct lcpick_t));
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
@@ -187,6 +204,7 @@ h_lcpick lcpick_create(HWND hwnd)
         CW_USEDEFAULT, CW_USEDEFAULT, 300, 300,
         hwnd, NULL, hInstance, lcpick
     );
+
     return lcpick;
 }
 
