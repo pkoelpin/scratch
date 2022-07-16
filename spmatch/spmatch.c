@@ -1,22 +1,40 @@
 /*
 spmatch - String Pattern Match
-Good resource on a simple regex implementation in C 
-    https://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html
+https://dogankurt.com/wildcard.html
 */
-#include <stdbool.h>
+#include <stddef.h>
 
-bool spmatch(const char *pattern, const char *string) {
-    char c;
-    for (;;) {
-        switch (c = *pattern++) {
-        case '\0':
-        case '?':
-        case '*':
-        default:
+int spmatch(char *pat, char *str)
+{
+    char *locp = NULL;
+    char *locs = NULL;
 
+    while (*str) {
+        /* we encounter a star */
+        if (*pat == '*') {
+            locp = ++pat;
+            locs = str;
+            if (*pat == '\0') {
+                return 1;
+            }
+            continue;
         }
+        /* we have a mismatch */
+        if (*str != *pat && *pat != '?') {
+            if (!locp) {
+                return 0;
+            }
+            str = ++locs;
+            pat = locp;
+            continue;
+        }
+        pat++, str++;
     }
-
+    /* check if the pattern's ended */
+    while (*pat == '*') {
+        pat++;
+    }
+    return (*pat == '\0');
 }
 
 int main() {
