@@ -2,7 +2,9 @@
 //
 
 #include "framework.h"
+#include <commctrl.h>
 #include "group-filter.h"
+#include "toolbar.h"
 
 #define MAX_LOADSTRING 100
 
@@ -10,6 +12,7 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND hwnd_toolbar;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -35,8 +38,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GROUPFILTER));
 
     MSG msg;
-
-    // Main message loop:
     while (GetMessage(&msg, NULL, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -68,7 +69,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GROUPFILTER));
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_GROUPFILTER);
+    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -93,7 +94,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         szWindowClass, 
         szTitle, 
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 
+        CW_USEDEFAULT, 0, 500, 500, 
         NULL, NULL, hInstance, NULL);
 
    if (!hWnd)
@@ -121,6 +122,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+    {
+        hwnd_toolbar = toolbar_create(hWnd, hInst);
+
+    }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -146,6 +152,48 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+    case WM_SIZE:
+    {
+        /* Get the dimensions of the main window */
+        RECT cr;
+        GetWindowRect(hWnd, &cr);
+
+        /* resize the toolbar */
+        SetWindowPos(hwnd_toolbar, 0, 0, 0, cr.right, cr.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
+        break;
+
+    }
+    case WM_NOTIFY:
+    {
+        LPNMHDR lpnm = ((LPNMHDR)lParam);
+        LPNMTOOLBAR lpnmTB = ((LPNMTOOLBAR)lParam);
+
+        switch (lpnm->code)
+        {
+        case TBN_DROPDOWN:
+        {
+            // Get the coordinates of the button.
+            RECT rc;
+            SendMessage(lpnmTB->hdr.hwndFrom, TB_GETRECT, (WPARAM)lpnmTB->iItem, (LPARAM)&rc);
+            MapWindowPoints(lpnmTB->hdr.hwndFrom, HWND_DESKTOP, (LPPOINT)&rc, 2);
+            HMENU hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_DISPLAY_OPTIONS));
+
+            HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_SHOW_FULL_MODEL));
+            SetMenuItemBitmaps(hMenuLoaded, ID_TEST_SHOWFULLMODE, MF_BYCOMMAND, hbmp, hbmp);
+            
+                
+                HMENU hPopupMenu = GetSubMenu(hMenuLoaded, 0);
+            TPMPARAMS tpm;
+            tpm.cbSize = sizeof(TPMPARAMS);
+            tpm.rcExclude = rc;
+            TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
+            DestroyMenu(hMenuLoaded);
+        }
+        default:
+            break;
+        }
+        break;
+    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

@@ -27,9 +27,15 @@
     <ClInclude Include="group-filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="toolbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="group-filter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="toolbar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,6 +49,54 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="group-filter.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\show_selected_only.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\show_selected.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\hide_selected.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\clear_selected.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\bitmap1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\show_all_groups.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\clear_all_groups.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\group.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\element.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\reload.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\highlight.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\bitmap3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\show_full_model.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\show_active_group.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\show_multiple_groups.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
