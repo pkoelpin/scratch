@@ -16,13 +16,11 @@ Clear All Groups
 Group Select
 Element Select
 -
-Highlight
 Reload
-Help
-
+Highlight
 */
 
-LRESULT CALLBACK WndProc_toolbar(HWND, UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR);
+static LRESULT CALLBACK WndProc_toolbar(HWND, UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR);
 
 HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
 {
@@ -81,21 +79,21 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
 
     TBBUTTON tbButtons[] = 
     {
-        {0, IDB_SHOW_FULL_MODEL, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, L""},
+        {0, IDM_DISPLAY_OPTIONS, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, L""},
         {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {1, IDB_SHOW_SELECTED_ONLY, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show Selected Groups Only"},
-        {2, IDB_SHOW_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show Selected Groups"},
-        {3, IDB_HIDE_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Hide Selected Groups"},
-        {4, IDB_CLEAR_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Clear Selected Groups"},
+        {1, IDM_SHOW_SELECTED_ONLY, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show Selected Groups Only"},
+        {2, IDM_SHOW_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show Selected Groups"},
+        {3, IDM_HIDE_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Hide Selected Groups"},
+        {4, IDM_CLEAR_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Clear Selected Groups"},
         {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {5, IDB_SHOW_ALL, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show All Groups"},
-        {6, IDB_CLEAR_ALL, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Clear All Groups"},
+        {5, IDM_SHOW_ALL, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show All Groups"},
+        {6, IDM_CLEAR_ALL, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Clear All Groups"},
         {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {7, IDB_GROUP, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Groups"},
-        {8, IDB_ELEMENT, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Elements"},
+        {7, IDM_GROUP, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Groups"},
+        {8, IDM_ELEMENT, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Elements"},
         {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {9, IDB_RELOAD, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Reload Groups from Model"},
-        {10, IDB_HIGHLIGHT, TBSTATE_ENABLED, TBSTYLE_DROPDOWN, {0}, 0, L"Highlight Selected Groups"},
+        {9, IDM_RELOAD, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Reload Groups from Model"},
+        {10, IDM_HIGHLIGHT_OPTIONS, TBSTATE_ENABLED, TBSTYLE_DROPDOWN, {0}, 0, L"Highlight Selected Groups"},
     };
 
     SendMessage(hwnd_toolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
@@ -104,7 +102,43 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
     return hwnd_toolbar;
 }
 
-LRESULT CALLBACK WndProc_toolbar(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+void toolbar_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    LPNMHDR lpnm = ((LPNMHDR)lParam);
+    LPNMTOOLBAR lpnmTB = ((LPNMTOOLBAR)lParam);
+    switch (lpnm->code)
+    {
+        case TBN_DROPDOWN:
+        {
+            HMENU hMenuLoaded;
+            switch (lpnmTB->iItem)
+            {
+            case IDM_DISPLAY_OPTIONS:
+                hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_DISPLAY_OPTIONS));
+                break;
+            case IDM_HIGHLIGHT_OPTIONS:
+                hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_HIGHLIGHT_OPTIONS));
+                break;
+            default:
+                hMenuLoaded = NULL;
+            }
+
+            // Get the coordinates of the button.
+            RECT rc;
+            SendMessage(lpnmTB->hdr.hwndFrom, TB_GETRECT, (WPARAM)lpnmTB->iItem, (LPARAM)&rc);
+            MapWindowPoints(lpnmTB->hdr.hwndFrom, HWND_DESKTOP, (LPPOINT)&rc, 2);
+
+            HMENU hPopupMenu = GetSubMenu(hMenuLoaded, 0);
+            TPMPARAMS tpm;
+            tpm.cbSize = sizeof(TPMPARAMS);
+            tpm.rcExclude = rc;
+            TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
+            DestroyMenu(hMenuLoaded);
+        }
+    }
+}
+
+static LRESULT CALLBACK WndProc_toolbar(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     switch (message)
     {

@@ -2,9 +2,9 @@
 //
 
 #include "framework.h"
-#include <commctrl.h>
 #include "group-filter.h"
 #include "toolbar.h"
+#include "femap.h"
 
 #define MAX_LOADSTRING 100
 
@@ -13,6 +13,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND hwnd_toolbar;
+void* femodel;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -125,7 +126,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
     {
         hwnd_toolbar = toolbar_create(hWnd, hInst);
-
+        femodel = femap_connect();
+        int i = 0;
     }
     case WM_COMMAND:
         {
@@ -139,6 +141,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_EXIT:
                 DestroyWindow(hWnd);
                 break;
+            case ID_HIGHLIGHTOPTIONS_HIGHLIGHT:
+            {
+                int i = 0;
+            }
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
@@ -164,36 +170,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     }
     case WM_NOTIFY:
-    {
-        LPNMHDR lpnm = ((LPNMHDR)lParam);
-        LPNMTOOLBAR lpnmTB = ((LPNMTOOLBAR)lParam);
-
-        switch (lpnm->code)
-        {
-        case TBN_DROPDOWN:
-        {
-            // Get the coordinates of the button.
-            RECT rc;
-            SendMessage(lpnmTB->hdr.hwndFrom, TB_GETRECT, (WPARAM)lpnmTB->iItem, (LPARAM)&rc);
-            MapWindowPoints(lpnmTB->hdr.hwndFrom, HWND_DESKTOP, (LPPOINT)&rc, 2);
-            HMENU hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_DISPLAY_OPTIONS));
-
-            HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_SHOW_FULL_MODEL));
-            SetMenuItemBitmaps(hMenuLoaded, ID_TEST_SHOWFULLMODE, MF_BYCOMMAND, hbmp, hbmp);
-            
-                
-                HMENU hPopupMenu = GetSubMenu(hMenuLoaded, 0);
-            TPMPARAMS tpm;
-            tpm.cbSize = sizeof(TPMPARAMS);
-            tpm.rcExclude = rc;
-            TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
-            DestroyMenu(hMenuLoaded);
-        }
-        default:
-            break;
-        }
+        toolbar_notify(hInst, hWnd, message, wParam, lParam);
         break;
-    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

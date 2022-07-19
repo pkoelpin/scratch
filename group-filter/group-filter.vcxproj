@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="femap.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="group-filter.h" />
     <ClInclude Include="Resource.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="toolbar.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="femap.cpp" />
     <ClCompile Include="group-filter.c" />
     <ClCompile Include="toolbar.c" />
   </ItemGroup>
@@ -158,9 +160,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="group-filter.ico" />
-    <Image Include="icons\bitmap1.bmp" />
-    <Image Include="icons\bitmap2.bmp" />
-    <Image Include="icons\bitmap3.bmp" />
     <Image Include="icons\clear_all_groups.bmp" />
     <Image Include="icons\clear_selected.bmp" />
     <Image Include="icons\element.bmp" />
