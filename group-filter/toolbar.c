@@ -1,6 +1,7 @@
-#include "Resource.h"
 #include <Windows.h>
 #include <commctrl.h>
+#include "Resource.h"
+#include "femap.h"
 
 /*
 Show Full Model, Show Active Group, Show Multiple Groups
@@ -21,6 +22,8 @@ Highlight
 */
 
 static LRESULT CALLBACK WndProc_toolbar(HWND, UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR);
+static void menu_displayoptions(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB, void* model);
+static void menu_highlight(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB);
 
 HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
 {
@@ -32,7 +35,7 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
         0,
         TOOLBARCLASSNAME,
         NULL,
-        WS_CHILD | TBSTYLE_WRAPABLE | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
+        WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
         0, 0, 0, 0,
         hwnd_parent, NULL, hInstance, NULL);
 
@@ -93,7 +96,7 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
         {8, IDM_ELEMENT, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Elements"},
         {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
         {9, IDM_RELOAD, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Reload Groups from Model"},
-        {10, IDM_HIGHLIGHT_OPTIONS, TBSTATE_ENABLED, TBSTYLE_DROPDOWN, {0}, 0, L"Highlight Selected Groups"},
+        {10, IDM_HIGHLIGHT_OPTIONS, TBSTATE_ENABLED, TBSTYLE_DROPDOWN | BTNS_CHECK, {0}, 0, L"Highlight Selected Groups"},
     };
 
     SendMessage(hwnd_toolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
@@ -102,7 +105,7 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
     return hwnd_toolbar;
 }
 
-void toolbar_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+void toolbar_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void *model)
 {
     LPNMHDR lpnm = ((LPNMHDR)lParam);
     LPNMTOOLBAR lpnmTB = ((LPNMTOOLBAR)lParam);
@@ -110,33 +113,56 @@ void toolbar_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPA
     {
         case TBN_DROPDOWN:
         {
-            HMENU hMenuLoaded;
             switch (lpnmTB->iItem)
             {
             case IDM_DISPLAY_OPTIONS:
-                hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_DISPLAY_OPTIONS));
+                menu_displayoptions(hInst, hWnd, lpnmTB, model);
                 break;
             case IDM_HIGHLIGHT_OPTIONS:
-                hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_HIGHLIGHT_OPTIONS));
+                menu_highlight(hInst, hWnd, lpnmTB);
                 break;
-            default:
-                hMenuLoaded = NULL;
             }
-
-            // Get the coordinates of the button.
-            RECT rc;
-            SendMessage(lpnmTB->hdr.hwndFrom, TB_GETRECT, (WPARAM)lpnmTB->iItem, (LPARAM)&rc);
-            MapWindowPoints(lpnmTB->hdr.hwndFrom, HWND_DESKTOP, (LPPOINT)&rc, 2);
-
-            HMENU hPopupMenu = GetSubMenu(hMenuLoaded, 0);
-            TPMPARAMS tpm;
-            tpm.cbSize = sizeof(TPMPARAMS);
-            tpm.rcExclude = rc;
-            TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
-            DestroyMenu(hMenuLoaded);
         }
     }
 }
+
+static void menu_displayoptions(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB, void* model) {
+    HMENU hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_DISPLAY_OPTIONS));
+
+    RECT rc;
+    SendMessage(lpnmTB->hdr.hwndFrom, TB_GETRECT, (WPARAM)lpnmTB->iItem, (LPARAM)&rc);
+    MapWindowPoints(lpnmTB->hdr.hwndFrom, HWND_DESKTOP, (LPPOINT)&rc, 2);
+
+    HMENU hPopupMenu = GetSubMenu(hMenuLoaded, 0);
+    CheckMenuRadioItem(hPopupMenu, 0, 2, 0, MF_BYPOSITION);
+
+    TPMPARAMS tpm;
+    tpm.cbSize = sizeof(TPMPARAMS);
+    tpm.rcExclude = rc;
+    TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
+
+    DestroyMenu(hMenuLoaded);
+}
+
+static void menu_highlight(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB) {
+    HMENU hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_HIGHLIGHT_OPTIONS));
+    // Get the coordinates of the button.
+    RECT rc;
+    SendMessage(lpnmTB->hdr.hwndFrom, TB_GETRECT, (WPARAM)lpnmTB->iItem, (LPARAM)&rc);
+    MapWindowPoints(lpnmTB->hdr.hwndFrom, HWND_DESKTOP, (LPPOINT)&rc, 2);
+
+    HMENU hPopupMenu = GetSubMenu(hMenuLoaded, 0);
+    TPMPARAMS tpm;
+    tpm.cbSize = sizeof(TPMPARAMS);
+    tpm.rcExclude = rc;
+    TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
+    DestroyMenu(hMenuLoaded);
+}
+
+// Info_ViewShowErase
+// feAppModelInfoShow
+// feAppSetModelInfoShow
+
 
 static LRESULT CALLBACK WndProc_toolbar(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {

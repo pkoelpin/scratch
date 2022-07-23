@@ -25,3 +25,9 @@ void* femap_connect()
     }
     return nullptr;
 }
+ 
+long femap_hMainWnd(void* model)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR *) model;
+    return pModel->hMainWnd;
+}
