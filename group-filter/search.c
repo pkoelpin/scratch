@@ -43,8 +43,7 @@ HWND search_create(HWND hwnd_parent, HINSTANCE hInstance)
     HFONT hFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
         OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
         DEFAULT_PITCH | FF_DONTCARE, TEXT("Segoe UI"));
-    SendMessage(hwnd_search, WM_SETFONT, (WPARAM)hFont, TRUE);
-
+    //SendMessage(hwnd_search, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     return hwnd_groupbox;
 }

@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <commctrl.h>
-#include "Resource.h"
+#include "resource.h"
 #include "femap.h"
 
 /*
@@ -37,15 +37,16 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
         NULL,
         WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
         0, 0, 0, 0,
-        hwnd_parent, NULL, hInstance, NULL);
+        hwnd_parent, ID_TOOLBAR, hInstance, NULL);
 
     if (hwnd_toolbar == NULL)
         return NULL;
+
+    /* Set the background*/
     SetWindowSubclass(hwnd_toolbar, &WndProc_toolbar, 1, 0);
 
     SendMessage(hwnd_toolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_DRAWDDARROWS);
     SendMessage(hwnd_toolbar, TB_SETMAXTEXTROWS, 0, 0);
-
 
     HIMAGELIST g_hImageList = ImageList_Create(
         bitmapSize, 
@@ -159,10 +160,10 @@ static void menu_highlight(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB) {
     DestroyMenu(hMenuLoaded);
 }
 
+// Highlight functions
 // Info_ViewShowErase
 // feAppModelInfoShow
 // feAppSetModelInfoShow
-
 
 static LRESULT CALLBACK WndProc_toolbar(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {

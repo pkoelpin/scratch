@@ -23,6 +23,8 @@
 #define IDM_HIGHLIGHT                   123
 #define IDM_DISPLAY_OPTIONS             124
 #define IDM_HIGHLIGHT_OPTIONS           125
+#define ID_LISTVIEW                     126
+#define ID_TOOLBAR                      127
 #define IDR_MAINFRAME                   128
 #define IDB_SHOW_SELECTED_ONLY          134
 #define IDB_SHOW_SELECTED               136
@@ -39,6 +41,10 @@
 #define IDB_SHOW_MULTIPLE_GROUPS        147
 #define IDR_DISPLAY_OPTIONS             148
 #define IDR_HIGHLIGHT_OPTIONS           149
+#define IDB_LISTVIEW_SHOW               150
+#define IDB_LISTVIEW_HIDE               151
+#define IDB_BITMAP2                     152
+#define IDB_LISTVIEW_CLEAR              152
 #define ID_TEST_SHOWFULLMODE            32772
 #define ID_TEST_SHOWACTIVEGROUP         32773
 #define ID_TEST_SHOWMULTIPLEGROUPS      32774
@@ -62,9 +68,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        150
+#define _APS_NEXT_RESOURCE_VALUE        153
 #define _APS_NEXT_COMMAND_VALUE         32788
 #define _APS_NEXT_CONTROL_VALUE         1000
-#define _APS_NEXT_SYMED_VALUE           126
+#define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

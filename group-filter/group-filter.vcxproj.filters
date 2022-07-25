@@ -36,6 +36,12 @@
     <ClInclude Include="search.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="listview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entitylist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="group-filter.c">
@@ -48,6 +54,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="search.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="listview.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="entitylist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -100,6 +112,21 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\show_multiple_groups.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\bitmap1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\listview_show.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\listview_hide.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\listview_clear.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

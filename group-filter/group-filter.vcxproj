@@ -143,17 +143,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="entitylist.h" />
     <ClInclude Include="femap.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="group-filter.h" />
+    <ClInclude Include="listview.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="toolbar.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="entitylist.c" />
     <ClCompile Include="femap.cpp" />
     <ClCompile Include="group-filter.c" />
+    <ClCompile Include="listview.c" />
     <ClCompile Include="search.c" />
     <ClCompile Include="toolbar.c" />
   </ItemGroup>
@@ -162,12 +166,17 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="group-filter.ico" />
+    <Image Include="icons\bitmap1.bmp" />
+    <Image Include="icons\bitmap2.bmp" />
     <Image Include="icons\clear_all_groups.bmp" />
     <Image Include="icons\clear_selected.bmp" />
     <Image Include="icons\element.bmp" />
     <Image Include="icons\group.bmp" />
     <Image Include="icons\hide_selected.bmp" />
     <Image Include="icons\highlight.bmp" />
+    <Image Include="icons\listview_clear.bmp" />
+    <Image Include="icons\listview_hide.bmp" />
+    <Image Include="icons\listview_show.bmp" />
     <Image Include="icons\reload.bmp" />
     <Image Include="icons\show_active_group.bmp" />
     <Image Include="icons\show_all_groups.bmp" />

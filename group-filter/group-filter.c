@@ -5,17 +5,24 @@
 //
 // UX guide
 // https://docs.microsoft.com/en-us/windows/win32/uxguide
+// 
+// ID Conventions
+// https://docs.microsoft.com/en-us/cpp/mfc/tn020-id-naming-and-numbering-conventions?view=msvc-170
+//
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include <stdbool.h>
 #include "framework.h"
+#include "resource.h"
 #include "group-filter.h"
 #include "toolbar.h"
+#include "listview.h"
 #include "search.h"
 #include "commctrl.h"
 #include "femap.h"
+#include "entitylist.h"
 
 #define MAX_LOADSTRING 100
 
@@ -27,7 +34,9 @@ HWND hwnd_toolbar;
 HWND hwnd_search;
 HWND hwnd_modelinfo;
 HWND hwnd_treeview;
+HWND hwnd_listview;
 void* femodel;
+entitylist* el;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -36,15 +45,23 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK       find_modelinfo(HWND hwnd, LPARAM lParam);
 BOOL CALLBACK       find_treeview(HWND hwnd, LPARAM lParam);
+void                grouplist_refresh();
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-    // TODO: Place code here.
+    // Load the common control set
+    INITCOMMONCONTROLSEX icex;
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC = ICC_STANDARD_CLASSES;
+    InitCommonControlsEx(&icex);
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_GROUPFILTER, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
+
+    // Initialize some global variables
+    el = entitylist_create();
 
     // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow))
@@ -74,10 +91,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+    WNDCLASSEXW wcex = {0};
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra     = 0;
@@ -141,16 +157,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        INITCOMMONCONTROLSEX icex;
-        icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-        icex.dwICC = ICC_STANDARD_CLASSES;
-        InitCommonControlsEx(&icex);
-
         hwnd_toolbar = toolbar_create(hWnd, hInst);
         hwnd_search = search_create(hWnd, hInst);
+        hwnd_listview = listview_create(hWnd, hInst);
 
         femodel = femap_connect();
         HWND hwnd_femap = femap_hMainWnd(femodel);
+        //femap_register(femodel, hWnd);
+
+        // Set the group list
+        grouplist_refresh();
 
         /* get the hwnd for the model info pane*/
         EnumChildWindows(hwnd_femap, find_modelinfo, 0);
@@ -177,23 +193,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         item.pszText = ptext;
         item.cchTextMax = 256;
         WCHAR text[256];
-        BOOL rc = WriteProcessMemory(process, tviptr, &item, sizeof(TVITEM), NULL);
-        LRESULT res = SendMessage(hwnd_treeview, TVM_GETITEM, 0, tviptr);
-        rc = ReadProcessMemory(process, ptext, &text, txtsize, NULL);
+        WriteProcessMemory(process, tviptr, &item, sizeof(TVITEM), NULL);
+        SendMessage(hwnd_treeview, TVM_GETITEM, 0, tviptr);
+        ReadProcessMemory(process, ptext, &text, txtsize, NULL);
 
         VirtualFreeEx(process, tviptr, sizeof(TVITEM) + txtsize, MEM_RELEASE);
         CloseHandle(process);
-
+        break;
     }
     case WM_COMMAND:
         {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
+            switch (LOWORD(wParam))
             {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
                 break;
@@ -217,20 +228,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
     {
         /* Get the dimensions of the main window */
-        RECT cr;
-        GetClientRect(hWnd, &cr);
+        RECT rect;
+        GetClientRect(hWnd, &rect);
 
-        /* resize the toolbar */
-        SetWindowPos(hwnd_toolbar, 0, 0, 0, cr.right, cr.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(hwnd_search, 0, 67, 27, cr.right - 74, 33, SWP_NOZORDER | SWP_NOACTIVATE);
-
+        SetWindowPos(hwnd_toolbar, 0, 0, 0, rect.right, rect.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(hwnd_search, 0, 67, 27, rect.right - 74, 33, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(hwnd_listview, 0, 7, 70, rect.right - rect.left - 14, rect.bottom - rect.top - 77, SWP_NOZORDER | SWP_NOACTIVATE);
         break;
-
     }
     case WM_NOTIFY:
-        toolbar_notify(hInst, hWnd, message, wParam, lParam, femodel);
+        switch (((LPNMHDR)lParam)->idFrom)
+        {
+        case ID_TOOLBAR:
+            toolbar_notify(hInst, hWnd, message, wParam, lParam, femodel);
+            break;
+        case ID_LISTVIEW:
+            listview_notify(hInst, hWnd, message, wParam, lParam, el);
+            break;
+        }
         break;
     case WM_DESTROY:
+        entitylist_free(el);
         PostQuitMessage(0);
         break;
     default:
@@ -263,22 +281,29 @@ BOOL CALLBACK find_treeview(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-// Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+void grouplist_refresh() 
 {
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
+    int count = femap_group_CountSet(femodel);
+    int* id = malloc(count * sizeof(int));
+    int* visibility = malloc(count * sizeof(int));
+    wchar_t** title = malloc(count * sizeof(wchar_t*));
+    for (int i = 0; i < count; i++)
     {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
-
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
+        title[i] = malloc(256 * sizeof(wchar_t));
     }
-    return (INT_PTR)FALSE;
+    femap_group_GetTitleList(femodel, id, title);
+    femap_group_GetVisibility(femodel, id, visibility);
+    entitylist_set(el, count, id, visibility, title);
+
+    /* reset the listview */
+    ListView_DeleteAllItems(hwnd_listview);
+    ListView_SetItemCount(hwnd_listview, count);
+
+    free(id);
+    free(visibility);
+    for (int i = 0; i < count; i++)
+    {
+        free(title[i]);
+    }
+    free(title);
 }
