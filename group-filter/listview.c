@@ -28,13 +28,13 @@ HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
     lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
     lvC.fmt = LVCFMT_LEFT;
     lvC.cchTextMax = 80;
-    lvC.cx = 100;
-    lvC.pszText = L"Visibility";
+    lvC.cx = 25;
+    lvC.pszText = L"";
     ListView_InsertColumn(hwnd_listview, 0, &lvC);
 
     lvC.pszText = L"ID";
     lvC.fmt = LVCFMT_RIGHT;
-    lvC.cx = 50;
+    lvC.cx = 25;
     ListView_InsertColumn(hwnd_listview, 1, &lvC);
 
     lvC.pszText = L"Title";
