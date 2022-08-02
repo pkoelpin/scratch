@@ -232,8 +232,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         GetClientRect(hWnd, &rect);
 
         SetWindowPos(hwnd_toolbar, 0, 0, 0, rect.right, rect.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(hwnd_search, 0, 67, 27, rect.right - 74, 33, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(hwnd_listview, 0, 7, 70, rect.right - rect.left - 14, rect.bottom - rect.top - 77, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(hwnd_search, 0, 7, 27, rect.right - 14, 22, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(hwnd_listview, 0, 7, 55, rect.right - rect.left - 14, rect.bottom - rect.top - 62, SWP_NOZORDER | SWP_NOACTIVATE);
         break;
     }
     case WM_NOTIFY:
@@ -243,7 +243,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             toolbar_notify(hInst, hWnd, message, wParam, lParam, femodel);
             break;
         case ID_LISTVIEW:
-            listview_notify(hInst, hWnd, message, wParam, lParam, el);
+            listview_notify(hInst, hWnd, message, wParam, lParam, femodel, el);
             break;
         }
         break;
@@ -287,13 +287,14 @@ void grouplist_refresh()
     int* id = malloc(count * sizeof(int));
     int* visibility = malloc(count * sizeof(int));
     wchar_t** title = malloc(count * sizeof(wchar_t*));
+
     for (int i = 0; i < count; i++)
     {
         title[i] = malloc(256 * sizeof(wchar_t));
     }
     femap_group_GetTitleList(femodel, id, title);
     femap_group_GetVisibility(femodel, id, visibility);
-    entitylist_set(el, count, id, visibility, title);
+    entitylist_setall(el, count, id, visibility, title);
 
     /* reset the listview */
     ListView_DeleteAllItems(hwnd_listview);

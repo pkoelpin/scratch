@@ -1,34 +1,34 @@
 #include <Windows.h>
 #include <commctrl.h>
-#include "resource.h"
+#include "Resource.h"
 #include "femap.h"
 
 /*
-Show Full Model, Show Active Group, Show Multiple Groups
--
-Show Selected Groups Only
-Show Selected Groups
-Hide Selected Groups
-Clear Selected Groups
--
-Show All Groups
-Clear All Groups
--
+Select type
+    Groups
+    Properties
+    Materials
+    Layups
+Reload Model
+Reset All Visibility Options
 Group Select
 Element Select
--
-Reload
-Highlight
+Show When Selected (Highlight)
+
+
+Highlight functions
+    Info_ViewShowErase
+    feAppModelInfoShow
+    feAppSetModelInfoShow
 */
 
-static LRESULT CALLBACK WndProc_toolbar(HWND, UINT, WPARAM, LPARAM, UINT_PTR, DWORD_PTR);
 static void menu_displayoptions(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB, void* model);
 static void menu_highlight(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB);
 
 HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
 {
     const int ImageListID = 0;
-    const int numButtons  = 11;
+    const int numButtons  = 6;
     const int bitmapSize  = 16;
 
     HWND hwnd_toolbar = CreateWindowEx(
@@ -42,66 +42,59 @@ HWND toolbar_create(HWND hwnd_parent, HINSTANCE hInstance)
     if (hwnd_toolbar == NULL)
         return NULL;
 
-    /* Set the background*/
-    SetWindowSubclass(hwnd_toolbar, &WndProc_toolbar, 1, 0);
-
+    /* Give the toolbar dropdown arrows */
     SendMessage(hwnd_toolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_DRAWDDARROWS);
+
+    /* Set the toolbar so that only buttons are display; no text */
     SendMessage(hwnd_toolbar, TB_SETMAXTEXTROWS, 0, 0);
 
-    HIMAGELIST g_hImageList = ImageList_Create(
+    /* Setup the image list */
+    HIMAGELIST hImageList = ImageList_Create(
         bitmapSize, 
         bitmapSize,  
         ILC_COLOR24 | ILC_MASK,
         numButtons,
         0);
 
-    // Set the image list.
     SendMessage(
         hwnd_toolbar, 
         TB_SETIMAGELIST,
         (WPARAM)ImageListID,
-        (LPARAM)g_hImageList);
+        (LPARAM)hImageList);
 
+    /* Add the bitmaps to the image lists */
     int bitmaps[] = { 
-        IDB_SHOW_FULL_MODEL,
-        IDB_SHOW_SELECTED_ONLY, 
-        IDB_SHOW_SELECTED, 
-        IDB_HIDE_SELECTED,
-        IDB_CLEAR_SELECTED,
-        IDB_SHOW_ALL,
-        IDB_CLEAR_ALL,
+        IDB_GROUP,
+        IDB_PROPERTY, 
+        IDB_MATERIAL, 
+        IDB_LAYUP,
+        IDB_RELOAD,
+        IDB_RESET_VISIBILITY,
         IDB_GROUP,
         IDB_ELEMENT,
-        IDB_RELOAD,
-        IDB_HIGHLIGHT};
-    HBITMAP hbmp;
-
-    for (int i = 0; i < numButtons; i++) {
-        hbmp = LoadBitmap(hInstance, MAKEINTRESOURCE(bitmaps[i]));
-        ImageList_AddMasked(g_hImageList, hbmp, RGB(233, 236, 238));
-    }
-
-    TBBUTTON tbButtons[] = 
-    {
-        {0, IDM_DISPLAY_OPTIONS, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, L""},
-        {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {1, IDM_SHOW_SELECTED_ONLY, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show Selected Groups Only"},
-        {2, IDM_SHOW_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show Selected Groups"},
-        {3, IDM_HIDE_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Hide Selected Groups"},
-        {4, IDM_CLEAR_SELECTED, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Clear Selected Groups"},
-        {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {5, IDM_SHOW_ALL, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Show All Groups"},
-        {6, IDM_CLEAR_ALL, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Clear All Groups"},
-        {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {7, IDM_GROUP, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Groups"},
-        {8, IDM_ELEMENT, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Select Pre-Filter Elements"},
-        {10, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0, -1},
-        {9, IDM_RELOAD, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, L"Reload Groups from Model"},
-        {10, IDM_HIGHLIGHT_OPTIONS, TBSTATE_ENABLED, TBSTYLE_DROPDOWN | BTNS_CHECK, {0}, 0, L"Highlight Selected Groups"},
+        IDB_HIGHLIGHT
     };
 
+    for (int i = 0; i < 9; i++) {
+        HBITMAP hbmp = LoadBitmap(hInstance, MAKEINTRESOURCE(bitmaps[i]));
+        ImageList_AddMasked(hImageList, hbmp, RGB(192, 192, 192));
+        DeleteObject(hbmp);
+    }
+
+    /* Setup the buttons for the toolbar */
+    TBBUTTON tbButtons[] = 
+    {
+        {0, IDM_DISPLAY_OPTIONS, TBSTATE_INDETERMINATE, BTNS_WHOLEDROPDOWN, {0}, 0, L"Select Entity to Filter"},
+        {4, IDM_RELOAD, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, {0}, 0, L"Reload Model"},
+        {5, IDM_SHOW_SELECTED, TBSTATE_INDETERMINATE, TBSTYLE_BUTTON, {0}, 0, L"Reset All Visibility Options"},
+        {6, IDM_GROUP, TBSTATE_INDETERMINATE, TBSTYLE_DROPDOWN | BTNS_CHECK, {0}, 0, L"Group Select"},
+        {7, IDM_ELEMENT, TBSTATE_INDETERMINATE, TBSTYLE_DROPDOWN | BTNS_CHECK, {0}, 0, L"Element Select"},
+        {8, IDM_HIGHLIGHT_OPTIONS, TBSTATE_INDETERMINATE, TBSTYLE_DROPDOWN | BTNS_CHECK, {0}, 0, L"Highlight Selected Groups"},
+    };
+
+    /* Add the buttons to the toolbar */
     SendMessage(hwnd_toolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-    SendMessage(hwnd_toolbar, TB_ADDBUTTONS, (WPARAM)numButtons+4, (LPARAM)&tbButtons);
+    SendMessage(hwnd_toolbar, TB_ADDBUTTONS, (WPARAM)numButtons, (LPARAM)&tbButtons);
 
     return hwnd_toolbar;
 }
@@ -145,6 +138,7 @@ static void menu_displayoptions(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB, 
     DestroyMenu(hMenuLoaded);
 }
 
+/* Popup menu when user selects the highlight button */
 static void menu_highlight(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB) {
     HMENU hMenuLoaded = LoadMenu(hInst, MAKEINTRESOURCE(IDR_HIGHLIGHT_OPTIONS));
     // Get the coordinates of the button.
@@ -158,26 +152,4 @@ static void menu_highlight(HINSTANCE hInst, HWND hWnd, LPNMTOOLBAR lpnmTB) {
     tpm.rcExclude = rc;
     TrackPopupMenuEx(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL, rc.left, rc.bottom, hWnd, &tpm);
     DestroyMenu(hMenuLoaded);
-}
-
-// Highlight functions
-// Info_ViewShowErase
-// feAppModelInfoShow
-// feAppSetModelInfoShow
-
-static LRESULT CALLBACK WndProc_toolbar(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
-{
-    switch (message)
-    {
-    case WM_ERASEBKGND:
-    {
-        HDC hdc = (HDC)(wParam);
-        RECT rc; GetClientRect(hWnd, &rc);
-        HBRUSH brush = CreateSolidBrush(RGB(188, 199, 216));
-        FillRect(hdc, &rc, brush);
-        DeleteObject(brush);
-        return TRUE;
-    }
-    }
-    return DefSubclassProc(hWnd, message, wParam, lParam);
 }

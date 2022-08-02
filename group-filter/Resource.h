@@ -43,8 +43,12 @@
 #define IDR_HIGHLIGHT_OPTIONS           149
 #define IDB_LISTVIEW_SHOW               150
 #define IDB_LISTVIEW_HIDE               151
-#define IDB_BITMAP2                     152
 #define IDB_LISTVIEW_CLEAR              152
+#define IDB_PROPERTY                    154
+#define IDB_MATERIAL                    155
+#define IDB_LAYUP                       156
+#define IDB_BITMAP2                     157
+#define IDB_RESET_VISIBILITY            157
 #define ID_TEST_SHOWFULLMODE            32772
 #define ID_TEST_SHOWACTIVEGROUP         32773
 #define ID_TEST_SHOWMULTIPLEGROUPS      32774
@@ -68,7 +72,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        153
+#define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         32788
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           128

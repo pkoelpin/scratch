@@ -3,4 +3,4 @@
 #include "entitylist.h"
 
 HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance);
-void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, entitylist *el);
+void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void* model, entitylist *el);

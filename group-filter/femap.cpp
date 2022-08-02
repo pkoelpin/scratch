@@ -39,7 +39,6 @@ void femap_register(void* model, int hwnd) {
     pModel->feAppRegisterAddInPane(true, hwnd, hwnd, false, false, 1, 2);
 }
 
-
 int femap_group_CountSet(void* model)
 {
     CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
@@ -81,28 +80,46 @@ void femap_group_GetTitleList(void* model, int* id, wchar_t** title)
     VariantClear(&vTitle);
 }
 
+void femap_view_SetMultiGroupList(void* model, bool bClear, int nGroups, const int *nGroupID)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
+
+    /* Get the active group */
+    CComQIPtr<femap::IView> pView;
+    pView = pModel->feView;
+    int activeView;
+    pModel->feAppGetActiveView(&activeView);
+    pView->Get(activeView);
+
+    CComSafeArray<int> arr(nGroups);
+    for (int i = 0; i < nGroups; i++) {
+        arr.SetAt(i, nGroupID[i]);
+    }
+    pView->SetMultiGroupList(bClear, nGroups, CComVariant(arr));
+    pView->Put(0);
+    pView->Regenerate();
+}
+
 void femap_group_GetVisibility(void* model, const int* id, int* visibility)
 {
     CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
     femap::zReturnCode rc;
 
+    /* Get the active group */
     CComQIPtr<femap::IView> pView;
     pView = pModel->feView;
-    pView->Get(pView->Active);
+    int activeView;
+    pModel->feAppGetActiveView(&activeView);
+    pView->Get(activeView);
 
     int count;
-    VARIANT vList;
-    VariantInit(&vList);
-    rc = pView->GetMultiGroupList(&count, &vList);
-    free(NULL);
+    CComVariant vList;
+    pView->GetMultiGroupList(&count, &vList);
 
     std::set<int> vis_set;
-    LPSAFEARRAY pSafeArray = V_ARRAY(&vList);
     for (long i = 0; i < count; i++)
     {
-        int id; 
-        SafeArrayGetElement(pSafeArray, &i, &id);
-        vis_set.insert(id);
+        vis_set.insert(CComSafeArray<int>(vList.parray).GetAt(i));
     }
 
     count = femap_group_CountSet(model);
@@ -121,6 +138,5 @@ void femap_group_GetVisibility(void* model, const int* id, int* visibility)
             visibility[i] = VIS_CLEAR;
         }
     }
-
     VariantClear(&vList);
 }

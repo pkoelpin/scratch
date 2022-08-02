@@ -129,5 +129,17 @@
     <Image Include="icons\listview_clear.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="icons\property.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\material.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\layup.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\reset_visibility.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

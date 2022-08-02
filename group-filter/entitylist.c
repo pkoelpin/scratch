@@ -10,11 +10,11 @@ typedef struct entity
 
 struct entitylist
 {
-    int       count;
-    entity* list;
-    int       count_sorted;
+    int      count;
+    entity*  list;
+    int      count_sorted;
     entity** list_sorted;
-    int       count_filtered;
+    int      count_filtered;
     entity** list_filtered;
 };
 
@@ -46,13 +46,20 @@ void entitylist_free(entitylist* el)
 
 void entitylist_get(entitylist* el, int index, int* id, int* visibility, wchar_t** title)
 {
-    *id = el->list_filtered[index]->id;
-    *visibility = el->list_filtered[index]->visibility;
-    *title = el->list_filtered[index]->title;
+    if (id != NULL)
+        *id = el->list_filtered[index]->id;
+    if (visibility != NULL)
+        *visibility = el->list_filtered[index]->visibility;
+    if (title != NULL)
+        *title = el->list_filtered[index]->title;
 }
 
+void entitylist_set_vis(entitylist* el, int index, int visibility)
+{
+    el->list_filtered[index]->visibility = visibility;
+}
 
-void entitylist_set(entitylist* el, int count, int* id, int * visibility, wchar_t** title)
+void entitylist_setall(entitylist* el, int count, int* id, int * visibility, wchar_t** title)
 {
     if (count > el->count) {
         el->list = realloc(el->list, count * sizeof(entity));
@@ -75,6 +82,40 @@ void entitylist_set(entitylist* el, int count, int* id, int * visibility, wchar_
 
         el->list_sorted[i] = &(el->list[i]);
         el->list_filtered[i] = &(el->list[i]);
+    }
+}
+
+int entitylist_count(entitylist* el)
+{
+    return el->count_filtered;
+}
+
+int entitylist_get_vis_count(entitylist* el)
+{
+    int count = 0;
+    for (int i = 0; i < el->count; i++)
+    {
+        if (el->list[i].visibility != VIS_CLEAR)
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+void entitylist_get_vis(entitylist* el, int* nGroupID)
+{
+    int count = 0;
+    for (int i = 0; i < el->count; i++)
+    {
+        if (el->list[i].visibility == VIS_SHOW)
+        {
+            nGroupID[count++] = el->list[i].id;
+        }
+        else if (el->list[i].visibility == VIS_HIDE)
+        {
+            nGroupID[count++] = -el->list[i].id;
+        }
     }
 }
 

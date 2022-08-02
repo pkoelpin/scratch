@@ -1,9 +1,11 @@
 #include <Windows.h>
 #include <commctrl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "resource.h"
 #include "listview.h"
 #include "entitylist.h"
+#include "femap.h"
 
 HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
 {
@@ -65,7 +67,7 @@ HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
     return hwnd_listview;
 }
 
-void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, entitylist* el)
+void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void* model, entitylist* el)
 {
     switch (((LPNMHDR)lParam)->code)
     {
@@ -96,10 +98,30 @@ void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LP
     case NM_CLICK:
     {
         LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
+        HWND hwnd_listview = ((LPNMHDR)lParam)->hwndFrom;
         if (lpnmitem->iSubItem == 0)
         {
+            /* change the visibilty state of the selected item */
             entitylist_vis_advance(el, lpnmitem->iItem);
-            int rc = ListView_RedrawItems(((LPNMHDR)lParam)->hwndFrom, lpnmitem->iItem, lpnmitem->iItem);
+            int visibility;
+            entitylist_get(el, lpnmitem->iItem, NULL, &visibility, NULL);
+
+            /* Get all selected items and upade their visibility*/
+            int selected_count = ListView_GetSelectedCount(hwnd_listview);
+            int index = -1;
+            for (int i = 0; i < selected_count; i++) {
+                index = ListView_GetNextItem(hwnd_listview, index, LVNI_SELECTED);
+                entitylist_set_vis(el, index, visibility);
+            }
+
+            /* Set the visibility state of all the groups */
+            int nGroups = entitylist_get_vis_count(el);
+            int* nGroupID = malloc(nGroups * sizeof(int));
+            entitylist_get_vis(el, nGroupID);
+            femap_view_SetMultiGroupList(model, true, nGroups, nGroupID);
+            free(nGroupID);
+            ListView_RedrawItems(hwnd_listview, lpnmitem->iItem, lpnmitem->iItem);
+            ListView_RedrawItems(hwnd_listview, -1, index);
         }
         break;
     }

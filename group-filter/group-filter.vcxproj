@@ -174,10 +174,14 @@
     <Image Include="icons\group.bmp" />
     <Image Include="icons\hide_selected.bmp" />
     <Image Include="icons\highlight.bmp" />
+    <Image Include="icons\layup.bmp" />
     <Image Include="icons\listview_clear.bmp" />
     <Image Include="icons\listview_hide.bmp" />
     <Image Include="icons\listview_show.bmp" />
+    <Image Include="icons\material.bmp" />
+    <Image Include="icons\property.bmp" />
     <Image Include="icons\reload.bmp" />
+    <Image Include="icons\reset_visibility.bmp" />
     <Image Include="icons\show_active_group.bmp" />
     <Image Include="icons\show_all_groups.bmp" />
     <Image Include="icons\show_full_model.bmp" />
