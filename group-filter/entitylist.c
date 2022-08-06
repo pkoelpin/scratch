@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include "entitylist.h"
 
+int match(wchar_t* pat, wchar_t* str);
+
 typedef struct entity
 {
     int      id;
@@ -133,4 +135,51 @@ void entitylist_vis_advance(entitylist* el, int index)
         el->list_filtered[index]->visibility = VIS_CLEAR;
         break;
     }
+}
+
+void entitylist_filter(entitylist* el, wchar_t* pat)
+{
+    el->count_filtered = 0;
+    int test = match(pat, el->list_sorted[0]->title);
+    free(NULL);
+    for (int i = 0; i < el->count_sorted; i++)
+    {
+        if (match(pat, el->list_sorted[i]->title))
+        {
+            el->list_filtered[el->count_filtered++] = el->list_sorted[i];
+        }
+    }
+}
+
+int match(wchar_t* pat, wchar_t* str)
+{
+    wchar_t* locp = NULL;
+    wchar_t* locs = NULL;
+
+    while (*str) {
+        /* we encounter a star */
+        if (*pat == '*') {
+            locp = ++pat;
+            locs = str;
+            if (*pat == '\0') {
+                return 1;
+            }
+            continue;
+        }
+        /* we have a mismatch */
+        if (*str != *pat && *pat != '?') {
+            if (!locp) {
+                return 0;
+            }
+            str = ++locs;
+            pat = locp;
+            continue;
+        }
+        pat++, str++;
+    }
+    /* check if the pattern's ended */
+    while (*pat == '*') {
+        pat++;
+    }
+    return (*pat == '\0');
 }

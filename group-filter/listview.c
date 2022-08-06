@@ -101,18 +101,28 @@ void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LP
         HWND hwnd_listview = ((LPNMHDR)lParam)->hwndFrom;
         if (lpnmitem->iSubItem == 0)
         {
-            /* change the visibilty state of the selected item */
+            /* Change the visibilty state of the selected item */
             entitylist_vis_advance(el, lpnmitem->iItem);
             int visibility;
             entitylist_get(el, lpnmitem->iItem, NULL, &visibility, NULL);
 
-            /* Get all selected items and upade their visibility*/
-            int selected_count = ListView_GetSelectedCount(hwnd_listview);
-            int index = -1;
-            for (int i = 0; i < selected_count; i++) {
-                index = ListView_GetNextItem(hwnd_listview, index, LVNI_SELECTED);
-                entitylist_set_vis(el, index, visibility);
+            /* Check to see if the item that the user clicked is also selected */
+            int index = ListView_GetNextItem(hwnd_listview, lpnmitem->iItem-1, LVNI_SELECTED);
+
+            /* Get all selected items and upate their visibility */
+            if (index == lpnmitem->iItem)
+            {
+                int selected_count = ListView_GetSelectedCount(hwnd_listview);
+                index = -1;
+                for (int i = 0; i < selected_count; i++) {
+                    index = ListView_GetNextItem(hwnd_listview, index, LVNI_SELECTED);
+                    entitylist_set_vis(el, index, visibility);
+                }
             }
+
+            /* Update the list view */
+            ListView_RedrawItems(hwnd_listview, lpnmitem->iItem, lpnmitem->iItem);
+            ListView_RedrawItems(hwnd_listview, -1, index);
 
             /* Set the visibility state of all the groups */
             int nGroups = entitylist_get_vis_count(el);
@@ -120,8 +130,6 @@ void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LP
             entitylist_get_vis(el, nGroupID);
             femap_view_SetMultiGroupList(model, true, nGroups, nGroupID);
             free(nGroupID);
-            ListView_RedrawItems(hwnd_listview, lpnmitem->iItem, lpnmitem->iItem);
-            ListView_RedrawItems(hwnd_listview, -1, index);
         }
         break;
     }

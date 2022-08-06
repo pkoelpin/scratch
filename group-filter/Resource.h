@@ -26,6 +26,7 @@
 #define ID_LISTVIEW                     126
 #define ID_TOOLBAR                      127
 #define IDR_MAINFRAME                   128
+#define IDM_SEARCHBAR                   128
 #define IDB_SHOW_SELECTED_ONLY          134
 #define IDB_SHOW_SELECTED               136
 #define IDB_HIDE_SELECTED               137
@@ -47,7 +48,6 @@
 #define IDB_PROPERTY                    154
 #define IDB_MATERIAL                    155
 #define IDB_LAYUP                       156
-#define IDB_BITMAP2                     157
 #define IDB_RESET_VISIBILITY            157
 #define ID_TEST_SHOWFULLMODE            32772
 #define ID_TEST_SHOWACTIVEGROUP         32773
@@ -75,6 +75,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         32788
 #define _APS_NEXT_CONTROL_VALUE         1000
-#define _APS_NEXT_SYMED_VALUE           128
+#define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

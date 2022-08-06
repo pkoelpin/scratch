@@ -212,6 +212,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case ID_SHOWFULLMODEL:
                 break;
+            case IDM_SEARCHBAR:
+                search_command(hInst, hWnd, message, wParam, lParam, el);
+                break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
