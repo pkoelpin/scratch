@@ -36,7 +36,7 @@ long femap_hMainWnd(void* model)
 
 void femap_register(void* model, int hwnd) {
     CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
-    pModel->feAppRegisterAddInPane(true, hwnd, hwnd, false, false, 1, 2);
+    pModel->feAppRegisterAddInPane(true, hwnd, hwnd, false, false, 0, 0);
 }
 
 int femap_group_CountSet(void* model)
@@ -84,7 +84,7 @@ void femap_view_SetMultiGroupList(void* model, bool bClear, int nGroups, const i
 {
     CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
 
-    /* Get the active group */
+    /* Get the active view */
     CComQIPtr<femap::IView> pView;
     pView = pModel->feView;
     int activeView;
@@ -105,7 +105,7 @@ void femap_group_GetVisibility(void* model, const int* id, int* visibility)
     CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
     femap::zReturnCode rc;
 
-    /* Get the active group */
+    /* Get the active view */
     CComQIPtr<femap::IView> pView;
     pView = pModel->feView;
     int activeView;
@@ -139,4 +139,42 @@ void femap_group_GetVisibility(void* model, const int* id, int* visibility)
         }
     }
     VariantClear(&vList);
+}
+
+int femap_group_GetActive(void* model)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
+    return pModel->feGroup->GetActive();
+}
+
+void femap_group_SetActive(void* model, int id)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
+    pModel->feGroup->PutActive(id);
+}
+
+void femap_view_regenerate(void* model)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
+
+    /* Get the active view */
+    CComQIPtr<femap::IView> pView;
+    pView = pModel->feView;
+    int activeView;
+    pModel->feAppGetActiveView(&activeView);
+    pView->Get(activeView);
+    pView->Regenerate();
+    free(NULL);
+}
+
+void femap_status_redraw(void* model)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
+    pModel->feAppStatusRedraw();
+}
+
+void femap_run_command(void* model, int command_id, bool wait)
+{
+    CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
+    pModel->feRunCommand(command_id, wait);
 }

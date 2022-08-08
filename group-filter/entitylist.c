@@ -18,6 +18,7 @@ struct entitylist
     entity** list_sorted;
     int      count_filtered;
     entity** list_filtered;
+    int      active_id;
 };
 
 entitylist* entitylist_create()
@@ -59,6 +60,16 @@ void entitylist_get(entitylist* el, int index, int* id, int* visibility, wchar_t
 void entitylist_set_vis(entitylist* el, int index, int visibility)
 {
     el->list_filtered[index]->visibility = visibility;
+}
+
+void entitylist_set_active(entitylist* el, int active_id)
+{
+    el->active_id = active_id;
+}
+
+int  entitylist_get_active(entitylist* el)
+{
+    return el->active_id;
 }
 
 void entitylist_setall(entitylist* el, int count, int* id, int * visibility, wchar_t** title)

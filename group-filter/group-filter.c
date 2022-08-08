@@ -5,10 +5,13 @@
 //
 // UX guide
 // https://docs.microsoft.com/en-us/windows/win32/uxguide
+// https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-layout?redirectedfrom=MSDN#sizingandspacing
 // 
 // ID Conventions
 // https://docs.microsoft.com/en-us/cpp/mfc/tn020-id-naming-and-numbering-conventions?view=msvc-170
 //
+// DPI Awareness
+// https://docs.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -30,22 +33,27 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND hwnd_main;
 HWND hwnd_toolbar;
 HWND hwnd_search;
 HWND hwnd_modelinfo;
+HWND hwnd_statusbar;
 HWND hwnd_treeview;
 HWND hwnd_listview;
 void* femodel;
 entitylist* el;
+UINT WM_FEMAP_MESSAGE;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK       find_modelinfo(HWND hwnd, LPARAM lParam);
 BOOL CALLBACK       find_treeview(HWND hwnd, LPARAM lParam);
+BOOL CALLBACK       find_statusbar(HWND hwnd, LPARAM lParam);
 void                grouplist_refresh();
+void                resize_all();
+
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
@@ -74,7 +82,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        int retcode = 0;
+        if (msg.hwnd == hwnd_listview) {
+            retcode = TranslateAccelerator(hwnd_main, hAccelTable, &msg);
+        }
+        if (!retcode)
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -84,11 +96,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     return (int) msg.wParam;
 }
 
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex = {0};
@@ -109,34 +116,24 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance; // Store instance handle in our global variable
 
-    HWND hWnd = CreateWindowW(
+    hwnd_main = CreateWindowW(
         szWindowClass, 
         szTitle, 
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, 500, 500, 
         NULL, NULL, hInstance, NULL);
 
-   if (!hWnd)
+   if (!hwnd_main)
    {
       return FALSE;
    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+   ShowWindow(hwnd_main, nCmdShow);
+   UpdateWindow(hwnd_main);
 
    return TRUE;
 }
@@ -153,6 +150,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    if (message == WM_FEMAP_MESSAGE)
+    {
+        switch (wParam) {
+        case 5:
+            free(NULL);
+            break;
+        case 9:  // FEVENT_DRAWEND
+            grouplist_refresh();
+            break;
+        }
+        return 0;
+    }
     switch (message)
     {
     case WM_CREATE:
@@ -163,7 +172,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         femodel = femap_connect();
         HWND hwnd_femap = femap_hMainWnd(femodel);
-        //femap_register(femodel, hWnd);
+        femap_register(femodel, hWnd);
+        WM_FEMAP_MESSAGE = RegisterWindowMessage(L"FE_EVENT_MESSAGE");
+
+        femap_run_command(femodel, 2223, true);
 
         // Set the group list
         grouplist_refresh();
@@ -171,6 +183,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         /* get the hwnd for the model info pane*/
         EnumChildWindows(hwnd_femap, find_modelinfo, 0);
         EnumChildWindows(hwnd_modelinfo, find_treeview, 0);
+
+        // Find the status bar
+        EnumChildWindows(hwnd_femap, find_statusbar, 0);
 
         /* Get the process that the treeview is running on */
         DWORD  pid;
@@ -212,8 +227,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case ID_SHOWFULLMODEL:
                 break;
+            case ID_SELECTALL:
+                ListView_SetItemState(hwnd_listview, -1, LVIS_SELECTED, LVIS_SELECTED);
+                break;
             case IDM_SEARCHBAR:
                 search_command(hInst, hWnd, message, wParam, lParam, el);
+                int count = entitylist_count(el);
+                ListView_SetItemCount(hwnd_listview, count);
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
@@ -224,21 +244,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
             EndPaint(hWnd, &ps);
         }
         break;
+    case WM_WINDOWPOSCHANGED:
     case WM_SIZE:
-    {
-        /* Get the dimensions of the main window */
-        RECT rect;
-        GetClientRect(hWnd, &rect);
-
-        SetWindowPos(hwnd_toolbar, 0, 0, 0, rect.right, rect.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(hwnd_search, 0, 7, 27, rect.right - 14, 22, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(hwnd_listview, 0, 7, 55, rect.right - rect.left - 14, rect.bottom - rect.top - 62, SWP_NOZORDER | SWP_NOACTIVATE);
+        resize_all();
         break;
-    }
     case WM_NOTIFY:
         switch (((LPNMHDR)lParam)->idFrom)
         {
@@ -246,8 +258,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             toolbar_notify(hInst, hWnd, message, wParam, lParam, femodel);
             break;
         case ID_LISTVIEW:
-            listview_notify(hInst, hWnd, message, wParam, lParam, femodel, el);
-            break;
+        {
+            int rc =  listview_notify(hInst, hWnd, message, wParam, lParam, femodel, el, hwnd_statusbar);
+            RedrawWindow(hwnd_treeview, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            return rc;
+        }
         }
         break;
     case WM_DESTROY:
@@ -258,6 +273,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
+}
+
+void resize_all()
+{
+    int iDpi = GetDpiForWindow(hwnd_main);
+    float scale = iDpi / 96.0;
+    RECT rect;
+    GetClientRect(hwnd_main, &rect);
+
+    int MARGIN = 11;
+    int PADDING = 7;
+
+    int TOOLBAR_X = 0;
+    int TOOLBAR_Y = 0;
+    int TOOLBAR_W = rect.right - 2*MARGIN;
+    int TOOLBAR_H = 23;
+    
+    int SEARCH_X = MARGIN;
+    int SEARCH_Y = TOOLBAR_Y + TOOLBAR_H + PADDING;
+    int SEARCH_W = rect.right - 2 * MARGIN;
+    int SEARCH_H = 25;
+
+    int LISTVIEW_X = MARGIN;
+    int LISTVIEW_Y = SEARCH_Y + SEARCH_H + PADDING;
+    int LISTVIEW_W = rect.right - rect.left - 2 * MARGIN;
+    int LISTVIEW_H = rect.bottom - rect.top - LISTVIEW_Y - MARGIN;
+
+    SetWindowPos(hwnd_toolbar, 0, TOOLBAR_X, TOOLBAR_Y, TOOLBAR_W, TOOLBAR_H, SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(hwnd_search, 0, SEARCH_X, SEARCH_Y, SEARCH_W, SEARCH_H, SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(hwnd_listview, 0, LISTVIEW_X, LISTVIEW_Y, LISTVIEW_W, LISTVIEW_H, SWP_NOZORDER | SWP_NOACTIVATE);
+    InvalidateRect(hwnd_main, NULL, FALSE);
 }
 
 BOOL CALLBACK find_modelinfo(HWND hwnd, LPARAM lParam)
@@ -284,6 +330,18 @@ BOOL CALLBACK find_treeview(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+BOOL CALLBACK find_statusbar(HWND hwnd, LPARAM lParam)
+{
+    WCHAR classname[256];
+    
+    GetClassName(hwnd, classname, 256);
+    if (wcscmp(classname, L"XTPStatusBar") == 0) {
+        hwnd_statusbar = hwnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
 void grouplist_refresh() 
 {
     int count = femap_group_CountSet(femodel);
@@ -298,9 +356,9 @@ void grouplist_refresh()
     femap_group_GetTitleList(femodel, id, title);
     femap_group_GetVisibility(femodel, id, visibility);
     entitylist_setall(el, count, id, visibility, title);
+    entitylist_set_active(el, femap_group_GetActive(femodel));
 
     /* reset the listview */
-    ListView_DeleteAllItems(hwnd_listview);
     ListView_SetItemCount(hwnd_listview, count);
 
     free(id);

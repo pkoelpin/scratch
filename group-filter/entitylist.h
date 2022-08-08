@@ -10,6 +10,8 @@ typedef struct entitylist entitylist;
 entitylist* entitylist_create();
 void entitylist_free(entitylist *el);
 void entitylist_setall(entitylist* el, int count, int* id, int* visibility, wchar_t** title);
+void entitylist_set_active(entitylist* el, int active_id);
+int  entitylist_get_active(entitylist* el);
 void entitylist_get(entitylist* el, int index, int* id, int* visibility, wchar_t** title);
 int  entitylist_count(entitylist* el);
 void entitylist_vis_advance(entitylist* el, int index);

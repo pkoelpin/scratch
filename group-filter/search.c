@@ -14,7 +14,7 @@ HWND search_create(HWND hwnd_parent, HINSTANCE hInstance)
         L"EDIT",
         L"",
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-        7, 40, 150, 18,
+        0, 0, 0, 0,
         hwnd_parent, IDM_SEARCHBAR, hInstance, NULL
     );
 
@@ -29,7 +29,11 @@ void search_command(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPA
     if (HIWORD(wParam) == EN_CHANGE)
     {
         wchar_t search_string[256];
-        GetWindowText(hwnd_search, search_string, 255);
+        GetWindowText(hwnd_search, search_string+1, 253);
+        search_string[0] = '*';
+        int len = wcslen(search_string);
+        search_string[len] = '*';
+        search_string[len+1] = '\0';
         entitylist_filter(el, search_string);
     }
 }

@@ -7,6 +7,8 @@
 #include "entitylist.h"
 #include "femap.h"
 
+static HFONT font_active;
+
 HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
 {
     RECT rc;
@@ -17,9 +19,7 @@ HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
         WC_LISTVIEW,
         NULL,
         WS_CHILD | LVS_REPORT | WS_VISIBLE | LVS_OWNERDATA | WS_BORDER,
-        7, 70,
-        rc.right - rc.left - 14,
-        rc.bottom - rc.top - 14,
+        0, 0, 0, 0,
         hwnd_parent, ID_LISTVIEW, hInstance, NULL
     );
 
@@ -36,7 +36,7 @@ HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
 
     lvC.pszText = L"ID";
     lvC.fmt = LVCFMT_RIGHT;
-    lvC.cx = 25;
+    lvC.cx = 50;
     ListView_InsertColumn(hwnd_listview, 1, &lvC);
 
     lvC.pszText = L"Title";
@@ -64,10 +64,25 @@ HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
 
     ListView_SetImageList(hwnd_listview, hImageList, LVSIL_STATE);
 
+    /* Set up the header */
+    HWND hHeader = ListView_GetHeader(hwnd_listview);
+    HDITEM hItem = { 0 };
+    hItem.mask = HDI_FORMAT;
+    Header_GetItem(hHeader, 1, &hItem);
+    hItem.fmt |= HDF_SORTUP;
+    Header_SetItem(hHeader, 1, &hItem);
+
+    /* Set up the font for the active item*/
+
+    font_active = SendMessage(hwnd_listview, WM_GETFONT, 0, 0);
+    
+    font_active = CreateFont(0, 0, 0, 0, FW_BOLD,
+        0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, L"Segoe UI");
+
     return hwnd_listview;
 }
 
-void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void* model, entitylist* el)
+int listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void* model, entitylist* el, HWND hwnd_statubar)
 {
     switch (((LPNMHDR)lParam)->code)
     {
@@ -87,19 +102,50 @@ void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LP
                 lpdi->item.stateMask = TVIS_STATEIMAGEMASK;
             break;
         case 1:
+        {
             swprintf_s(lpdi->item.pszText, lpdi->item.cchTextMax, L"%d", id);
             break;
+        }
         case 2:
+        {
             lpdi->item.pszText = title;
             break;
         }
+        }
         break;
+    }
+    case NM_CUSTOMDRAW:
+    {
+        LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
+        switch (lplvcd->nmcd.dwDrawStage) {
+        case CDDS_PREPAINT:
+            return CDRF_NOTIFYITEMDRAW;
+            break;
+        case CDDS_ITEMPREPAINT:
+        {
+            int index = (int)lplvcd->nmcd.dwItemSpec;
+            int id;
+            entitylist_get(el, index, &id, NULL, NULL);
+
+            if (id == entitylist_get_active(el)) {
+                lplvcd->clrText = RGB(0, 0, 255);
+                SelectObject(((HDC)lplvcd->nmcd.hdc), font_active);
+                //lplvcd->clrTextBk = RGB(255, 0, 0);
+            }
+            return CDRF_NEWFONT;
+            break;
+        }
+        case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+            return CDRF_NEWFONT;
+            break;
+        }
+        return TRUE;
     }
     case NM_CLICK:
     {
         LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
         HWND hwnd_listview = ((LPNMHDR)lParam)->hwndFrom;
-        if (lpnmitem->iSubItem == 0)
+        if (lpnmitem->iSubItem == 0 && lpnmitem->iItem >= 0)
         {
             /* Change the visibilty state of the selected item */
             entitylist_vis_advance(el, lpnmitem->iItem);
@@ -131,6 +177,36 @@ void listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LP
             femap_view_SetMultiGroupList(model, true, nGroups, nGroupID);
             free(nGroupID);
         }
+        break;
+    }
+    case NM_DBLCLK:
+    {
+        LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
+        HWND hwnd_listview = ((LPNMHDR)lParam)->hwndFrom;
+        int id;
+        entitylist_get(el, lpnmitem->iItem, &id, NULL, NULL);
+        entitylist_set_active(el, id);
+        ListView_RedrawItems(hwnd_listview, -1, entitylist_count(el));
+        femap_group_SetActive(model, id);
+        femap_status_redraw(model);
+        //femap_view_regenerate(model);
+        //InvalidateRect(hwnd_statubar, NULL, TRUE);
+        break;
+    }
+    case LVN_COLUMNCLICK:
+    {
+        HWND hwnd_listview = ((LPNMHDR)lParam)->hwndFrom;
+        int col_index = ((LPNMLISTVIEW)lParam)->iSubItem;
+
+        /* Get the header */
+        HWND hHeader = ListView_GetHeader(hwnd_listview);
+
+        /* set the header */
+        //HDITEM hItem = { 0 };
+        //hItem.mask = HDI_FORMAT;
+        //Header_GetItem(hHeader, col_index, &hItem);
+        //hItem.fmt |= HDF_SORTUP;
+        //Header_SetItem(hHeader, col_index, &hItem);
         break;
     }
     return 0;
