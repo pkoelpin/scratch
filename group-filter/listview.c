@@ -82,7 +82,7 @@ HWND listview_create(HWND hwnd_parent, HINSTANCE hInstance)
     return hwnd_listview;
 }
 
-int listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void* model, entitylist* el, HWND hwnd_statubar)
+int listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, void* model, entitylist* el)
 {
     switch (((LPNMHDR)lParam)->code)
     {

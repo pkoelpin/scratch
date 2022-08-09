@@ -37,7 +37,6 @@ HWND hwnd_main;
 HWND hwnd_toolbar;
 HWND hwnd_search;
 HWND hwnd_modelinfo;
-HWND hwnd_statusbar;
 HWND hwnd_treeview;
 HWND hwnd_listview;
 void* femodel;
@@ -50,7 +49,6 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK       find_modelinfo(HWND hwnd, LPARAM lParam);
 BOOL CALLBACK       find_treeview(HWND hwnd, LPARAM lParam);
-BOOL CALLBACK       find_statusbar(HWND hwnd, LPARAM lParam);
 void                grouplist_refresh();
 void                resize_all();
 
@@ -170,50 +168,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         hwnd_search = search_create(hWnd, hInst);
         hwnd_listview = listview_create(hWnd, hInst);
 
+        /* Connect to the femap instance and register to get messages */
         femodel = femap_connect();
         HWND hwnd_femap = femap_hMainWnd(femodel);
         femap_register(femodel, hWnd);
         WM_FEMAP_MESSAGE = RegisterWindowMessage(L"FE_EVENT_MESSAGE");
 
-        femap_run_command(femodel, 2223, true);
+        // Test something
+        int id[] = { 2, 4, 6, 8, 10 };
+        femap_modelinfo_select(hwnd_femap, sizeof(id) / sizeof(int), id);
 
         // Set the group list
         grouplist_refresh();
-
-        /* get the hwnd for the model info pane*/
-        EnumChildWindows(hwnd_femap, find_modelinfo, 0);
-        EnumChildWindows(hwnd_modelinfo, find_treeview, 0);
-
-        // Find the status bar
-        EnumChildWindows(hwnd_femap, find_statusbar, 0);
-
-        /* Get the process that the treeview is running on */
-        DWORD  pid;
-        GetWindowThreadProcessId(hwnd_treeview, &pid);
-        HANDLE process = OpenProcess(PROCESS_VM_WRITE | PROCESS_VM_READ | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION, false, pid);
-
-        /* Get the root item of the treeview */
-        int item_count = TreeView_GetCount(hwnd_treeview);
-        HTREEITEM root = TreeView_GetSelection(hwnd_treeview);
-
-        /* allocate space for the TVITEM on the other process*/
-        size_t txtsize = 256 * 2;
-        LPVOID tviptr = VirtualAllocEx(process, NULL, sizeof(TVITEM) + txtsize, MEM_COMMIT, PAGE_READWRITE);
-
-        /* create the text pointer*/
-        LPWSTR ptext = (char*)tviptr + sizeof(TVITEM);
-        TVITEM item;
-        item.hItem = root;
-        item.mask = TVIF_TEXT;
-        item.pszText = ptext;
-        item.cchTextMax = 256;
-        WCHAR text[256];
-        WriteProcessMemory(process, tviptr, &item, sizeof(TVITEM), NULL);
-        SendMessage(hwnd_treeview, TVM_GETITEM, 0, tviptr);
-        ReadProcessMemory(process, ptext, &text, txtsize, NULL);
-
-        VirtualFreeEx(process, tviptr, sizeof(TVITEM) + txtsize, MEM_RELEASE);
-        CloseHandle(process);
+        
         break;
     }
     case WM_COMMAND:
@@ -258,11 +225,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             toolbar_notify(hInst, hWnd, message, wParam, lParam, femodel);
             break;
         case ID_LISTVIEW:
-        {
-            int rc =  listview_notify(hInst, hWnd, message, wParam, lParam, femodel, el, hwnd_statusbar);
-            RedrawWindow(hwnd_treeview, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-            return rc;
-        }
+            return listview_notify(hInst, hWnd, message, wParam, lParam, femodel, el);
         }
         break;
     case WM_DESTROY:
@@ -280,7 +243,8 @@ void resize_all()
     int iDpi = GetDpiForWindow(hwnd_main);
     float scale = iDpi / 96.0;
     RECT rect;
-    GetClientRect(hwnd_main, &rect);
+    if (!GetClientRect(hwnd_main, &rect))
+        return;
 
     int MARGIN = 11;
     int PADDING = 7;
@@ -299,47 +263,9 @@ void resize_all()
     int LISTVIEW_Y = SEARCH_Y + SEARCH_H + PADDING;
     int LISTVIEW_W = rect.right - rect.left - 2 * MARGIN;
     int LISTVIEW_H = rect.bottom - rect.top - LISTVIEW_Y - MARGIN;
-
     SetWindowPos(hwnd_toolbar, 0, TOOLBAR_X, TOOLBAR_Y, TOOLBAR_W, TOOLBAR_H, SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(hwnd_search, 0, SEARCH_X, SEARCH_Y, SEARCH_W, SEARCH_H, SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(hwnd_listview, 0, LISTVIEW_X, LISTVIEW_Y, LISTVIEW_W, LISTVIEW_H, SWP_NOZORDER | SWP_NOACTIVATE);
-    InvalidateRect(hwnd_main, NULL, FALSE);
-}
-
-BOOL CALLBACK find_modelinfo(HWND hwnd, LPARAM lParam)
-{
-    WCHAR title[256];
-    GetWindowTextW(hwnd, title, 256);
-    if (wcscmp(title, L"Model Info") == 0) {
-        hwnd_modelinfo = hwnd;
-        return FALSE;
-    }
-    return TRUE;
-}
-
-BOOL CALLBACK find_treeview(HWND hwnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hwnd))
-        return TRUE;
-    WCHAR classname[256];
-    GetClassName(hwnd, classname, 256);
-    if (wcscmp(classname, L"SysTreeView32") == 0) {
-        hwnd_treeview = hwnd;
-        return FALSE;
-    }
-    return TRUE;
-}
-
-BOOL CALLBACK find_statusbar(HWND hwnd, LPARAM lParam)
-{
-    WCHAR classname[256];
-    
-    GetClassName(hwnd, classname, 256);
-    if (wcscmp(classname, L"XTPStatusBar") == 0) {
-        hwnd_statusbar = hwnd;
-        return FALSE;
-    }
-    return TRUE;
 }
 
 void grouplist_refresh() 
@@ -369,3 +295,4 @@ void grouplist_refresh()
     }
     free(title);
 }
+

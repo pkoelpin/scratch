@@ -178,3 +178,4 @@ void femap_run_command(void* model, int command_id, bool wait)
     CComQIPtr<femap::Imodel> pModel = (IUnknown FAR*) model;
     pModel->feRunCommand(command_id, wait);
 }
+

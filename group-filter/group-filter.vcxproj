@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="entitylist.h" />
     <ClInclude Include="femap.h" />
+    <ClInclude Include="femap_win.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="group-filter.h" />
     <ClInclude Include="listview.h" />
@@ -168,6 +169,7 @@
   <ItemGroup>
     <ClCompile Include="entitylist.c" />
     <ClCompile Include="femap.cpp" />
+    <ClCompile Include="femap_win.cpp" />
     <ClCompile Include="group-filter.c" />
     <ClCompile Include="listview.c" />
     <ClCompile Include="search.c" />

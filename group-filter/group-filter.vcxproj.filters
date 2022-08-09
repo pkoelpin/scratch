@@ -42,6 +42,9 @@
     <ClInclude Include="entitylist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="femap_win.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="group-filter.c">
@@ -60,6 +63,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="entitylist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="femap_win.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
