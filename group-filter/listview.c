@@ -86,6 +86,23 @@ int listview_notify(HINSTANCE hInst, HWND hWnd, UINT message, WPARAM wParam, LPA
 {
     switch (((LPNMHDR)lParam)->code)
     {
+    case LVN_ITEMCHANGED:
+    case LVN_ODSTATECHANGED:
+    {
+        /* Get all selected items and upate their visibility */
+        HWND hwnd_listview = ((LPNMHDR)lParam)->hwndFrom;
+        int selected_count = ListView_GetSelectedCount(hwnd_listview);
+        int* id = malloc(selected_count * sizeof(int));
+        int index = -1;
+        for (int i = 0; i < selected_count; i++) {
+            index = ListView_GetNextItem(hwnd_listview, index, LVNI_SELECTED);
+            entitylist_get(el, index, &id[i], NULL, NULL);
+        }
+        HWND hwnd_femap = femap_hMainWnd(model);
+        femap_modelinfo_select(hwnd_femap, selected_count, id);
+        free(id);
+        break;
+    }
     case LVN_GETDISPINFO:
     {
         LV_DISPINFO* lpdi = (LV_DISPINFO*)lParam;

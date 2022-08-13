@@ -174,10 +174,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         femap_register(femodel, hWnd);
         WM_FEMAP_MESSAGE = RegisterWindowMessage(L"FE_EVENT_MESSAGE");
 
-        // Test something
-        int id[] = { 2, 4, 6, 8, 10 };
-        femap_modelinfo_select(hwnd_femap, sizeof(id) / sizeof(int), id);
-
         // Set the group list
         grouplist_refresh();
         

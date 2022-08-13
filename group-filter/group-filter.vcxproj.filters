@@ -65,8 +65,11 @@
     <ClCompile Include="entitylist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="femap_win.cpp">
+    <ClCompile Include="femap_win.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="set32.h">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

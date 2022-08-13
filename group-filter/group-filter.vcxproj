@@ -169,10 +169,11 @@
   <ItemGroup>
     <ClCompile Include="entitylist.c" />
     <ClCompile Include="femap.cpp" />
-    <ClCompile Include="femap_win.cpp" />
+    <ClCompile Include="femap_win.c" />
     <ClCompile Include="group-filter.c" />
     <ClCompile Include="listview.c" />
     <ClCompile Include="search.c" />
+    <ClCompile Include="set32.h" />
     <ClCompile Include="toolbar.c" />
   </ItemGroup>
   <ItemGroup>

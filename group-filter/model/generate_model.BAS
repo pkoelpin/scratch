@@ -9,7 +9,7 @@ Sub Main
     Set tmpSet = App.feSet
 
     Dim count As Long
-    count = 500
+    count = 50
 
     ' Clear all elements
     tmpSet.Clear()
@@ -44,7 +44,7 @@ Sub Main
     ' Generate materials
     Dim material As femap.Matl
     Set material = App.feMatl
-    for i = 1 to count
+    for i = 1 to count*count
         material.color = Int((124 - 0 + 1) * Rnd + 0)
         material.type = 0
         material.title = "Material " + Cstr(i)
@@ -57,12 +57,12 @@ Sub Main
     ' Generate layups
     Dim layup As femap.Layup
     Set layup = App.feLayup
-    for i = 1 to count
+    for i = 1 to count*count
         layup.clear()
         layup.title = "Layup " + Cstr(i)
         plyCount = Int((50 - 1 + 1) * Rnd + 1)
         for j = 0 to plyCount
-            layup.AddPly(Int((count - 1 + 1) * Rnd + 1), 0.01, 90 * Rnd, 0)
+            layup.AddPly(Int((count*count - 1 + 1) * Rnd + 1), 0.01, 90 * Rnd, 0)
         Next j
         layup.put(i)
     Next i
@@ -70,7 +70,7 @@ Sub Main
     ' Generate Properties
     Dim prop As femap.Prop
     Set prop = App.feProp
-    for i = 1 to count
+    for i = 1 to count*count
         prop.color = Int((124 - 0 + 1) * Rnd + 0)
         prop.title = "Property " + Cstr(i)
         prop.LayupID = ID
@@ -83,7 +83,7 @@ Sub Main
     Dim entID As Variant
     Dim xyz As Variant
 
-    numNode = (count + 1) * (count + 1)
+    numNode = (count*count + 1) * (count*count + 1)
     Redim entID(numNode)
     Redim xyz(3 * numNode)
 
@@ -106,7 +106,7 @@ Sub Main
     for i = 0 to count - 1 
         for j = 0 to count - 1
                 index = i * (count) + j
-                elem.propID = i + 1
+                elem.propID = index
                 elem.topology = 4
                 elem.node(0) = i * (count + 1) + j + 1
                 elem.node(1) = i * (count + 1) + j + 2
@@ -119,10 +119,10 @@ Sub Main
     ' Generate Groups
     Dim group As femap.Group
     Set group = App.feGroup
-    for i = 1 to count
+    for i = 1 to count*count
         group.Clear()
         group.title = "Group " + Cstr(i)
-        group.RangeAdd( 23,  i, i, 1, 1)
+        group.RangeAdd(23, i, i, 1, 1)
         group.put(i)
     Next i
 
