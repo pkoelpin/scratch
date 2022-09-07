@@ -12,6 +12,9 @@
 //
 // DPI Awareness
 // https://docs.microsoft.com/en-us/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows
+
+// The following pragma enables common controls
+// This compiler directive will only work in Visual C++
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -21,9 +24,9 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include "resource.h"
 #include "group-filter.h"
 #include "toolbar.h"
+#include "commctrl.h"
 #include "listview.h"
 #include "search.h"
-#include "commctrl.h"
 #include "femap.h"
 #include "entitylist.h"
 
@@ -44,7 +47,7 @@ entitylist* el;
 UINT WM_FEMAP_MESSAGE;
 
 // Forward declarations of functions included in this code module:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
+ATOM                RegisterWindowClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK       find_modelinfo(HWND hwnd, LPARAM lParam);
@@ -52,19 +55,18 @@ BOOL CALLBACK       find_treeview(HWND hwnd, LPARAM lParam);
 void                grouplist_refresh();
 void                resize_all();
 
-
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
     // Load the common control set
-    INITCOMMONCONTROLSEX icex;
+    INITCOMMONCONTROLSEX icex = { 0 };
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC = ICC_STANDARD_CLASSES;
+    icex.dwICC  = ICC_STANDARD_CLASSES;
     InitCommonControlsEx(&icex);
 
     // Initialize global strings
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_GROUPFILTER, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDC_GROUPFILTER, szWindowClass, MAX_LOADSTRING);
+    RegisterWindowClass(hInstance);
 
     // Initialize some global variables
     el = entitylist_create();
@@ -94,7 +96,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     return (int) msg.wParam;
 }
 
-ATOM MyRegisterClass(HINSTANCE hInstance)
+ATOM RegisterWindowClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex = {0};
 
@@ -116,7 +118,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-    hInst = hInstance; // Store instance handle in our global variable
+    hInst = hInstance;
 
     hwnd_main = CreateWindowW(
         szWindowClass, 
@@ -136,16 +138,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE: Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (message == WM_FEMAP_MESSAGE)
@@ -236,8 +228,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void resize_all()
 {
-    int iDpi = GetDpiForWindow(hwnd_main);
-    float scale = iDpi / 96.0;
     RECT rect;
     if (!GetClientRect(hwnd_main, &rect))
         return;
@@ -291,4 +281,3 @@ void grouplist_refresh()
     }
     free(title);
 }
-
