@@ -1,4 +1,0 @@
-#include <winuser.h>
-#include "resource.h"
-IDI_KTK_SELECTCOND ICON "favicon.ico"
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"

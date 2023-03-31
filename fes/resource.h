@@ -1,4 +1,3 @@
-#define IDI_KTK_SELECTCOND           101
 #define ID_LISTVIEW_LEFT             201
 #define ID_LISTVIEW_RIGHT            202
 #define ID_SEARCH_LEFT               203
@@ -10,3 +9,5 @@
 #define ID_BUTTON_UNDO               209
 #define ID_BUTTON_REDO               210
 #define ID_BUTTON_OK                 211
+#define ID_ACCEL                     212
+#define ID_SELECTALL                 213
