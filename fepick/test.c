@@ -4,7 +4,7 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include "fes.h"
+#include "fepick.h"
 
 int mainCRTStartup(void) {
     int n = 100000;
@@ -20,10 +20,9 @@ int mainCRTStartup(void) {
         title[i][3] = '\0';
         //memcpy(title[i], subcase, sizeof(subcase)) ;
     }
-    int count = fes_cond(id, title, n);
-    printf("%d", GetLastError());
-
-    
+    int count = fepick_case(id, title, n);
+    printf("%d", count);
+    //printf("%d", GetLastError());
 
     ExitProcess(0);
 }

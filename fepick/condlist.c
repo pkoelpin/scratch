@@ -1,3 +1,4 @@
+/* The pragma supresses warnings from the standard headers */
 #include <windows.h>
 #include <stdbool.h>
 #include "condlist.h"
@@ -10,8 +11,12 @@ returns 1 for match
 */
 static int spmatch(const char *pat, const char *str)
 {
-    char *locp = NULL;
-    char *locs = NULL;
+    if (str == NULL) {
+        return 0;
+    }
+
+    const char *locp = NULL;
+    const char *locs = NULL;
 
     while (*str) {
         /* we encounter a star */
@@ -60,8 +65,9 @@ struct condlist {
     const char * const *title;
     int n;
     int *idx;
-    int len;
+    int len;   /* total in idx array. this is after filtering */
     bool isactive;
+    int count; /* total that pass the bool test for activity */
 };
 
 condlist *condlist_create(int *id, const char * const *title, int n, bool isactive) {
@@ -81,15 +87,25 @@ void condlist_free(condlist *list) {
     HeapFree(GetProcessHeap(), 0, list);
 }
 
+static const char *condlist_title(condlist *list, int i) {
+    if ((list->title == NULL) ||  (list->title[i] == NULL)) {
+        return '\0';
+    } else {
+        return list->title[i];
+    }
+}
+
 void condlist_update(condlist *list, const char *filter) {
     list->len = 0;
+    list->count = 0;
     for (int i=0; i<list->n; i++) {
         if ((list->id[i] > 0) == list->isactive)  {
+            list->count++;
             char num[64];
             long2str(num, list->id[i]);
             if ( (filter == NULL) || 
                  (filter[0] == '\0') || 
-                 (spmatch(filter, list->title[i])) ||
+                 (spmatch(filter, condlist_title(list,i))) ||
                  (spmatch(filter, num))
                 ) 
             {
@@ -99,12 +115,16 @@ void condlist_update(condlist *list, const char *filter) {
     }
 }
 
+void condlist_set_id(condlist *list, int *id) {
+    list->id = id;
+}
+
 int condlist_get_id(condlist *list, int index) {
     return list->id[list->idx[index]];
 }
 
 const char * condlist_get_title(condlist *list, int index) {
-    return list->title[list->idx[index]];
+    return condlist_title(list, list->idx[index]);
 }
 
 void condlist_flip(condlist *list, int index) {
@@ -113,5 +133,9 @@ void condlist_flip(condlist *list, int index) {
 
 int condlist_len(condlist *list) {
     return list->len;
+}
+
+int condlist_count(condlist *list) {
+    return list->count;
 }
 

@@ -1,0 +1,16 @@
+<svg viewBox="0 0 100 100" 
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <polygon points="50 0,100 25,50 50,0 25" fill="#70B038"/>
+    <polygon points="50 50,100 25,100 75,50 100" fill="#57882D"/>
+    <polygon points="50 50,50 100,0 75,0 25" fill="#3F6121"/>
+    <!--
+    <ellipse cx="50" cy="10" rx="5" ry="5" fill="#000000" /> 
+    <ellipse cx="50" cy="50" rx="5" ry="5" fill="#000000" /> 
+    <ellipse cx="50" cy="90" rx="5" ry="5" fill="#000000" /> 
+    <ellipse cx="10" cy="30" rx="5" ry="5" fill="#000000" /> 
+    <ellipse cx="10" cy="70" rx="5" ry="5" fill="#000000" /> 
+    <ellipse cx="90" cy="30" rx="5" ry="5" fill="#000000" /> 
+    <ellipse cx="90" cy="70" rx="5" ry="5" fill="#000000" /> 
+    -->
+</svg>
