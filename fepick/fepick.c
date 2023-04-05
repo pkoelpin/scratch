@@ -15,8 +15,8 @@
 #include "condlist.h"
 #include "Strbuf.h"
 
-#define CLASSNAME L"SelectCondition"
-#define DLLNAME L"fepick"
+#define CLASSNAME "SelectCondition"
+#define DLLNAME "fepick"
 
 static wchar_t msgbuf[1024]; 
 
@@ -87,7 +87,7 @@ void state_free(struct state *s){
 }
 
 void update(HWND hwnd) {
-    struct state *s = (struct state*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     
     /* Get the text in the search bars */
     HWND hwnd_search_left = GetDlgItem(hwnd, ID_SEARCH_LEFT);
@@ -148,9 +148,9 @@ void update(HWND hwnd) {
 
 /* Generic function to create all the buttons for the window */
 void button_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long id) {
-    CreateWindowExW(
+    CreateWindowEx(
         0,
-        L"BUTTON",
+        TEXT("BUTTON"),
         text,
         WS_VISIBLE | WS_CHILD,
         0, 0, 0, 0,
@@ -159,9 +159,9 @@ void button_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long id
 }
 
 void undo_redo_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long id) {
-    CreateWindowExW(
+    CreateWindowEx(
         0,
-        L"BUTTON",
+        TEXT("BUTTON"),
         text,
         WS_VISIBLE | WS_CHILD | BS_SPLITBUTTON,
         0, 0, 0, 0,
@@ -170,7 +170,7 @@ void undo_redo_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long
 }
 
 void listview_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
-    HWND hwnd = CreateWindowExW(
+    HWND hwnd = CreateWindowEx(
         0,
         WC_LISTVIEW,
         NULL,
@@ -181,37 +181,38 @@ void listview_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
 
     ListView_SetExtendedListViewStyleEx(hwnd, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 
-    LV_COLUMN lvC;
+    LVCOLUMN lvC;
     lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
     lvC.fmt = LVCFMT_LEFT;
     lvC.cchTextMax = 80;
     lvC.cx = 50;
-    lvC.pszText = L"ID";
+    lvC.pszText = TEXT("ID");
     ListView_InsertColumn(hwnd, 0, &lvC);
 
-    lvC.pszText = L"Title";
+    lvC.pszText = TEXT("Title");
     lvC.fmt = LVCFMT_LEFT;
     lvC.cx = 200;
     ListView_InsertColumn(hwnd, 1, &lvC); 
 }
 
 void search_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
-    HWND hwnd = CreateWindowExW(
+    HWND hwnd = CreateWindowEx(
         0,
-        L"EDIT",
-        L"",
+        TEXT("EDIT"),
+        TEXT(""),
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
         0, 0, 0, 0,
         hwnd_parent, (HMENU)id, hInst, NULL
     );
 
+    /* This function only comes in UTF-16, so that's why it's L"Search" */
     Edit_SetCueBannerText(hwnd, L"Search");
 }
 
 void separator_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
-    HWND hwnd = CreateWindowExW(
+    HWND hwnd = CreateWindowEx(
         0,
-        L"STATIC",
+        TEXT("STATIC"),
         NULL,
         WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ | SS_SUNKEN,
         0, 0, 0, 0,
@@ -220,10 +221,10 @@ void separator_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
 }
 
 void status_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
-    HWND hwnd = CreateWindowExW(
+    HWND hwnd = CreateWindowEx(
         0,
         STATUSCLASSNAME,
-        L"",
+        TEXT(""),
         WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
         0, 0, 0, 0,
         hwnd_parent, (HMENU)id, hInst, NULL
@@ -231,9 +232,9 @@ void status_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
 }
 
 void groupbox_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long id) {
-    CreateWindowExW(
+    CreateWindowEx(
         0,
-        L"BUTTON",
+        TEXT("BUTTON"),
         text,
         WS_VISIBLE | WS_CHILD | BS_GROUPBOX,
         0, 0, 0, 0,
@@ -242,7 +243,7 @@ void groupbox_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long 
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    struct state *s = (struct state*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg) {
     case WM_CREATE: {
@@ -251,15 +252,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         listview_create(hwnd, hInst, ID_LISTVIEW_RIGHT);
         search_create(hwnd, hInst, ID_SEARCH_LEFT);
         search_create(hwnd, hInst, ID_SEARCH_RIGHT);
-        button_create(hwnd, hInst, L">>", ID_BUTTON_PICK_ALL);
-        button_create(hwnd, hInst, L">", ID_BUTTON_PICK_SELECTED);
-        button_create(hwnd, hInst, L"<", ID_BUTTON_UNPICK_SELECTED);
-        button_create(hwnd, hInst, L"<<", ID_BUTTON_UNPICK_ALL);
-        undo_redo_create(hwnd, hInst, L"Undo", ID_BUTTON_UNDO);
-        undo_redo_create(hwnd, hInst, L"Redo", ID_BUTTON_REDO);
-        button_create(hwnd, hInst, L"OK", ID_BUTTON_OK);
-        groupbox_create(hwnd, hInst, L"Inactive Conditions", ID_GROUPBOX_LEFT);
-        groupbox_create(hwnd, hInst, L"Active Conditions", ID_GROUPBOX_RIGHT);
+        button_create(hwnd, hInst, TEXT(">>"), ID_BUTTON_PICK_ALL);
+        button_create(hwnd, hInst, TEXT(">"), ID_BUTTON_PICK_SELECTED);
+        button_create(hwnd, hInst, TEXT("<"), ID_BUTTON_UNPICK_SELECTED);
+        button_create(hwnd, hInst, TEXT("<<"), ID_BUTTON_UNPICK_ALL);
+        undo_redo_create(hwnd, hInst, TEXT("Undo"), ID_BUTTON_UNDO);
+        undo_redo_create(hwnd, hInst, TEXT("Redo"), ID_BUTTON_REDO);
+        button_create(hwnd, hInst, TEXT("OK"), ID_BUTTON_OK);
+        groupbox_create(hwnd, hInst, TEXT("Inactive Conditions"), ID_GROUPBOX_LEFT);
+        groupbox_create(hwnd, hInst, TEXT("Active Conditions"), ID_GROUPBOX_RIGHT);
         status_create(hwnd, hInst, ID_STATUSBAR);
 
         } return 0;
@@ -411,7 +412,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 pt.y = pDropDown->rcButton.bottom;
                 ClientToScreen(pDropDown->hdr.hwndFrom, &pt);
         
-                // Create a menu and add items.
+                /* Create a menu and add items. */
                 HMENU hSplitMenu = CreatePopupMenu();
                 wchar_t msg[256];
                 struct strbuf b = MEMBUF(msg, sizeof(msg));
@@ -424,7 +425,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     AppendMenu(hSplitMenu, MF_BYPOSITION, i+1, msg);
                 }
         
-                // Display the menu.
+                /*/ Display the menu. */
                 TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN, pt.x, pt.y, 0, hwnd, NULL);
             }
             break;
@@ -517,7 +518,7 @@ int _DllMainCRTStartup(void) {
 
 __declspec(dllexport)
 int fepick_case(int *id, const char * const *title, int n) {
-    HINSTANCE hinstance = GetModuleHandleW(DLLNAME);
+    HINSTANCE hinstance = GetModuleHandle(TEXT(DLLNAME));
 
     INITCOMMONCONTROLSEX icex;
     icex.dwICC = ICC_LISTVIEW_CLASSES;
@@ -534,15 +535,15 @@ int fepick_case(int *id, const char * const *title, int n) {
     wc.hCursor       = NULL;
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
     wc.lpszMenuName  = NULL;
-    wc.lpszClassName = CLASSNAME;
+    wc.lpszClassName = TEXT(CLASSNAME);
     wc.hIconSm       = NULL;
 
     RegisterClassEx(&wc);
 
-    HWND hwnd = CreateWindowExW(
+    HWND hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
-        CLASSNAME,
-        L"Select Active Conditions",
+        TEXT(CLASSNAME),
+        TEXT("Select Active Conditions"),
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1000, 500,
         NULL, NULL, hinstance, NULL
@@ -561,7 +562,7 @@ int fepick_case(int *id, const char * const *title, int n) {
     while (GetMessage(&message, NULL, 0, 0)) {
 
         int retcode = 0;
-        switch (GetDlgCtrlID(message.hwnd)){
+        switch (GetWindowLongPtrW(hwnd,GWLP_ID)){
             case ID_SEARCH_LEFT:
             case ID_SEARCH_RIGHT:
                 break;
