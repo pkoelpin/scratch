@@ -62,12 +62,13 @@ static void long2str(unsigned char *buf, long x) {
 
 struct condlist {
     int *id;
-    const char * const *title;
+    char **title;
     int n;
-    int *idx;
-    int len;   /* total in idx array. this is after filtering */
+    int *idx_sorted; /* this will always hold n */
+    int *idx;  
+    int len;        /* total in idx array. this is after filtering */
     bool isactive;
-    int count; /* total that pass the bool test for activity */
+    int count;      /* total that pass the bool test for activity */
 };
 
 condlist *condlist_create(int *id, const char * const *title, int n, bool isactive) {
@@ -76,6 +77,7 @@ condlist *condlist_create(int *id, const char * const *title, int n, bool isacti
     list->title = title;
     list->n = n;
     list->idx = (int*)HeapAlloc(GetProcessHeap(), 0, n*sizeof(int));
+    list->idx_sorted = (int*)HeapAlloc(GetProcessHeap(), 0, n*sizeof(int));
     list->len = 0;
     list->isactive = isactive;
     condlist_update(list, NULL);
@@ -99,6 +101,7 @@ void condlist_update(condlist *list, const char *filter) {
     list->len = 0;
     list->count = 0;
     for (int i=0; i<list->n; i++) {
+        if (list->id[i] == 0) continue; /* skip 0 */
         if ((list->id[i] > 0) == list->isactive)  {
             list->count++;
             char num[64];

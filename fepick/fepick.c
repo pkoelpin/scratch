@@ -13,7 +13,10 @@
 #include <stdbool.h>
 #include "resource.h"
 #include "condlist.h"
-#include "Strbuf.h"
+#include "strbuf.h"
+
+#include "stdlib.h"
+#include "search.h"
 
 #define CLASSNAME "SelectCondition"
 #define DLLNAME "fepick"
@@ -28,6 +31,7 @@ struct state {
     int buf_cur;
     int buf_used;
     int buf_len;
+    int *undo_count_list;
     bool ok;
 };
 
@@ -35,6 +39,7 @@ struct state* state_create(int *id, const char * const *title, int n) {
     struct state *s = (struct state*)HeapAlloc(GetProcessHeap(), 0, sizeof(struct state));
     s->n = n;
     s->buf = (int*)HeapAlloc(GetProcessHeap(), 0, n*sizeof(int));
+    s->undo_count_list = (int*)HeapAlloc(GetProcessHeap(), 0, sizeof(int));
     for (int i=0; i<n; i++){
         s->buf[i] = id[i];
     }
@@ -51,10 +56,12 @@ void state_advance(struct state *s) {
     if (s->buf_used == s->buf_len) {
         s->buf_len *= 2;
         s->buf = HeapReAlloc(GetProcessHeap(), 0, s->buf, s->n * s->buf_len * sizeof(int));
+        s->undo_count_list = HeapReAlloc(GetProcessHeap(), 0, s->undo_count_list, s->buf_len * sizeof(int));
     }
     for (int i=0; i<s->n; i++) {
         s->buf[s->n*(s->buf_cur+1) + i] = s->buf[s->n*s->buf_cur + i];
     }
+    s->undo_count_list[s->buf_cur] = condlist_count(s->right);
     s->buf_cur++;
     condlist_set_id(s->left, s->buf + s->n*s->buf_cur);
     condlist_set_id(s->right, s->buf + s->n*s->buf_cur);
@@ -65,6 +72,7 @@ void state_undo(struct state *s) {
     if (s->buf_cur == 0) {
         return;
     }
+    s->undo_count_list[s->buf_cur] = condlist_count(s->right);
     s->buf_cur--;
     condlist_set_id(s->left, s->buf + s->n*s->buf_cur);
     condlist_set_id(s->right, s->buf + s->n*s->buf_cur);
@@ -105,12 +113,13 @@ void update(HWND hwnd) {
     WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)text_left_wide, 1024, text_left, 1024, NULL, NULL);
     WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)text_right_wide, 1024, text_right, 1024, NULL, NULL);
 
+    /* update the lists with the text in the search bars*/
     condlist_update(s->left, text_left);
     condlist_update(s->right, text_right);
 
+    /* give the listviews a new item count */
     HWND hwnd_left = GetDlgItem(hwnd, ID_LISTVIEW_LEFT);
     HWND hwnd_right = GetDlgItem(hwnd, ID_LISTVIEW_RIGHT);
-
     ListView_SetItemCount(hwnd_left, condlist_len(s->left));
     ListView_SetItemCount(hwnd_right, condlist_len(s->right));
 
@@ -140,10 +149,13 @@ void update(HWND hwnd) {
     APPEND_STR(&b4, L"\0");
     SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), SB_SETTEXT, 4, (LPARAM)(msgbuf+768));
 
-    /* enable undo/redo */
+    /* enable/disable undo/redo */
     EnableWindow(GetDlgItem(hwnd, ID_BUTTON_UNDO), s->buf_cur != 0);
     EnableWindow(GetDlgItem(hwnd, ID_BUTTON_REDO), s->buf_cur != s->buf_used - 1);
+}
 
+void sort(HWND hwnd) {
+    struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 }
 
 /* Generic function to create all the buttons for the window */
@@ -417,16 +429,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 wchar_t msg[256];
                 struct strbuf b = MEMBUF(msg, sizeof(msg));
 
-                for (int i=0; i<10; i++){
+                int undo_count = 0;
+                for (int i=s->buf_cur-1; i >= 0; i--){
                     b.len = 0;
-                    APPEND_STR(&b, L"Menu Item: ");
-                    append_long(&b, i);
-                    APPEND_STR(&b, L"\0");
-                    AppendMenu(hSplitMenu, MF_BYPOSITION, i+1, msg);
+                    APPEND_STR(&b, L"Active Count: ");
+                    append_long(&b, s->undo_count_list[i]);
+                    APPEND_STR(&b, L"\0"); 
+                    AppendMenu(hSplitMenu, MF_BYPOSITION, ++undo_count, msg);
                 }
         
-                /*/ Display the menu. */
-                TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN, pt.x, pt.y, 0, hwnd, NULL);
+                /* Display the menu. */
+                undo_count = TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD , pt.x, pt.y, 0, hwnd, NULL);
+
+                /* perform the undo */
+                for (int i=0; i<undo_count; i++){
+                    state_undo(s);
+                }
+                update(hwnd);
+            }
+            break;
+        case ID_BUTTON_REDO:
+            if (lpnmhdr->code == BCN_DROPDOWN ) {
+                NMBCDROPDOWN* pDropDown = (NMBCDROPDOWN*)lParam;
+                POINT pt;
+                pt.x = pDropDown->rcButton.left;
+                pt.y = pDropDown->rcButton.bottom;
+                ClientToScreen(pDropDown->hdr.hwndFrom, &pt);
+        
+                /* Create a menu and add items. */
+                HMENU hSplitMenu = CreatePopupMenu();
+                wchar_t msg[256];
+                struct strbuf b = MEMBUF(msg, sizeof(msg));
+
+                int redo_count = 0;
+                for (int i=s->buf_cur+1; i<s->buf_used; i++){
+                    b.len = 0;
+                    APPEND_STR(&b, L"Active Count: ");
+                    append_long(&b, s->undo_count_list[i]);
+                    APPEND_STR(&b, L"\0"); 
+                    AppendMenu(hSplitMenu, MF_BYPOSITION, ++redo_count, msg);
+                }
+        
+                /* Display the menu. */
+                redo_count = TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD , pt.x, pt.y, 0, hwnd, NULL);
+
+                /* perform the undo */
+                for (int i=0; i<redo_count; i++){
+                    state_redo(s);
+                }
+                update(hwnd);
             }
             break;
         }
@@ -517,7 +568,7 @@ int _DllMainCRTStartup(void) {
 }
 
 __declspec(dllexport)
-int fepick_case(int *id, const char * const *title, int n) {
+int fepick_case(int *id, char **title, int n) {
     HINSTANCE hinstance = GetModuleHandle(TEXT(DLLNAME));
 
     INITCOMMONCONTROLSEX icex;

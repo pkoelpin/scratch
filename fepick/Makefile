@@ -3,7 +3,7 @@ CFLAGS  = /O2 /nologo /W3
 all: test.exe fepick.dll fepick.lib
 
 fepick.dll: fepick.obj fepick.res condlist.obj
-	link $**  /NOLOGO /DLL /NODEFAULTLIB /out:$@ kernel32.lib user32.lib Gdi32.lib vcruntime.lib libcmt.lib
+	link $**  /NOLOGO /DLL /NODEFAULTLIB /out:$@ kernel32.lib user32.lib Gdi32.lib vcruntime.lib libcmt.lib ucrt.lib
 
 fepick.lib: fepick.dll
 
