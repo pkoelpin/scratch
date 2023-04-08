@@ -17,6 +17,7 @@
 
 #include "stdlib.h"
 #include "search.h"
+#include "stdio.h"
 
 #define CLASSNAME "SelectCondition"
 #define DLLNAME "fepick"
@@ -413,6 +414,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         break;
                     }
                 }
+                break;
+            case LVN_COLUMNCLICK:
+                int col_index = ((LPNMLISTVIEW)lParam)->iSubItem;
+                
+                /* get the header */
+                HWND hHeader = ListView_GetHeader(lpnmhdr->hwndFrom);
+                HDITEM hItem = { 0 };
+                hItem.mask = HDI_FORMAT;
+                Header_GetItem(hHeader, col_index, &hItem);
+                
+                switch (col_index) {
+                    case 0:
+                        if (hItem.fmt & HDF_SORTDOWN) { /* clear sort */
+                            hItem.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+                            condlist_sort_clear(list);
+                        } else if (hItem.fmt & HDF_SORTUP) { /* switch to sort down */
+                            hItem.fmt &= ~HDF_SORTUP;
+                            hItem.fmt |= HDF_SORTDOWN;
+                            condlist_sort_id_descending(list);
+                        } else { /* switch to sort up */
+                            hItem.fmt &= ~HDF_SORTDOWN;
+                            hItem.fmt |= HDF_SORTUP;
+                            condlist_sort_id_ascending(list);
+                            //printf("%d\n", list->isactive);
+                        }
+                        Header_SetItem(hHeader, col_index, &hItem);
+                        hItem.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+                        Header_SetItem(hHeader, 1, &hItem);
+                        break;
+                    case 1:
+                        if (hItem.fmt & HDF_SORTDOWN) { /* clear sort */
+                            hItem.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+                            condlist_sort_clear(list);
+                        } else if (hItem.fmt & HDF_SORTUP) { /* switch to sort down */
+                            hItem.fmt &= ~HDF_SORTUP;
+                            hItem.fmt |= HDF_SORTDOWN;
+                            condlist_sort_title_descending(list);
+                        } else { /* switch to sort up */
+                            hItem.fmt &= ~HDF_SORTDOWN;
+                            hItem.fmt |= HDF_SORTUP;
+                            condlist_sort_title_ascending(list);
+                        }
+                        Header_SetItem(hHeader, col_index, &hItem);
+                        hItem.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+                        Header_SetItem(hHeader, 0, &hItem);
+                        break;
+
+                }
+                update(hwnd);
+                break;
             }
             break;
             
@@ -569,8 +620,10 @@ int _DllMainCRTStartup(void) {
 
 __declspec(dllexport)
 int fepick_case(int *id, char **title, int n) {
+    /* Get the instance for the DLL. We need to search by name, so use DLLNAME */
     HINSTANCE hinstance = GetModuleHandle(TEXT(DLLNAME));
 
+    /* This is required to initialize the common controls (listview) */
     INITCOMMONCONTROLSEX icex;
     icex.dwICC = ICC_LISTVIEW_CLASSES;
     InitCommonControlsEx(&icex);
@@ -594,7 +647,7 @@ int fepick_case(int *id, char **title, int n) {
     HWND hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         TEXT(CLASSNAME),
-        TEXT("Select Active Conditions"),
+        TEXT("Select Active Load Cases"),
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1000, 500,
         NULL, NULL, hinstance, NULL
@@ -627,7 +680,8 @@ int fepick_case(int *id, char **title, int n) {
             DispatchMessage(&message);
         }
     }
-    
+
+    /* Update the outputs for the function */    
     int active_count = 0;
     for (int i=0; i<n; i++) {
         if (s->ok) {

@@ -22,7 +22,6 @@
 #define ID_ICON                      219
 #define ID_ACCEL_LEFT                220
 #define ID_ACCEL_RIGHT               221
-
-
+#define ID_RIGHTCLICK_MENU           222
 
 #endif

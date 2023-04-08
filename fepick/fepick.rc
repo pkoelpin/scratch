@@ -12,6 +12,22 @@ BEGIN
     "Y", ID_BUTTON_REDO, CONTROL, VIRTKEY
 END
 
+ID_RIGHTCLICK_MENU MENU
+BEGIN
+    POPUP "HIghlight Options"
+    BEGIN
+        MENUITEM "Off",                         ID_BUTTON_OK
+        MENUITEM "Highlight",                   ID_BUTTON_OK
+        MENUITEM "Transparent Highlight",       ID_BUTTON_OK
+        MENUITEM "Show Selected Only",          ID_BUTTON_OK
+        MENUITEM SEPARATOR
+        MENUITEM "Autoscale to Show Entities",  ID_BUTTON_OK
+        MENUITEM "Show Labels",                 ID_BUTTON_OK
+        MENUITEM "Show Normals",                ID_BUTTON_OK
+        MENUITEM "Highlight Color",             ID_BUTTON_OK
+    END
+END
+
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 1,0,0,0
  PRODUCTVERSION 1,0,0,0

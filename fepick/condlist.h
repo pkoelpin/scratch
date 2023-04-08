@@ -11,3 +11,8 @@ void condlist_set_id(condlist *list, int *id);
 int condlist_get_id(condlist *list, int index);
 void condlist_flip(condlist *list, int index);
 const char * condlist_get_title(condlist *list, int index);
+void condlist_sort_clear(condlist *list);
+void condlist_sort_id_ascending(condlist *list);
+void condlist_sort_id_descending(condlist *list);
+void condlist_sort_title_ascending(condlist *list);
+void condlist_sort_title_descending(condlist *list);
