@@ -3,3 +3,6 @@
 *.o
 *.so
 *.obj
+*.lib
+*.res
+*.exp
