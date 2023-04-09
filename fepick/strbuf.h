@@ -25,7 +25,7 @@ void append(struct strbuf *b, wchar_t *src, int len)
 void append_long(struct strbuf *b, long x)
 {
     wchar_t tmp[64];
-    wchar_t *end = tmp + sizeof(tmp);
+    wchar_t *end = tmp + sizeof(tmp)/sizeof(wchar_t);
     wchar_t *beg = end;
     long t = x>0 ? -x : x;
     do {

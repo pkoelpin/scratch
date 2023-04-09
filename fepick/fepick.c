@@ -255,149 +255,131 @@ void groupbox_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long 
     );
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+void wm_size(HWND hwnd, int WINDOW_H, int WINDOW_W) {
+    UINT flags = SWP_NOZORDER | SWP_NOACTIVATE;
+    int GUTTER = 12;
+    int PADDING = 8;
+    int BUTTON_W = 120;
+    int BUTTON_H = 32;
+    int SEARCH_H = 23;
+    int STATUS_H = 20;
+
+    /* Get dimensions of status bar on the bottom */
+    RECT sb_rect;
+    SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), SB_GETRECT , 0, (LPARAM)&sb_rect);
+    int SB_H = sb_rect.bottom - sb_rect.top;
+
+    /* groupbox positioning */
+    int GBL_X = GUTTER;
+    int GBL_Y = GUTTER;
+    int GBL_W = WINDOW_W/2 - GUTTER - PADDING - BUTTON_W/2;
+    int GBL_H = WINDOW_H - 2*GUTTER - SB_H;
+    SetWindowPos(GetDlgItem(hwnd, ID_GROUPBOX_LEFT), 0, 
+        GBL_X, GBL_Y, GBL_W, GBL_H, flags);
+
+    int GBR_X = GBL_X + GBL_W + BUTTON_W + PADDING*2;
+    int GBR_Y = GUTTER;
+    int GBR_W = GBL_W;
+    int GBR_H = GBL_H;
+    SetWindowPos(GetDlgItem(hwnd, ID_GROUPBOX_RIGHT), 0, 
+        GBR_X, GBR_Y, GBR_W, GBR_H, flags);
+
+    /* Position search bars */
+    int SL_X = GUTTER + PADDING;
+    int SL_Y = GBL_Y + 3*PADDING;
+    int SL_W = WINDOW_W/2 - GUTTER - PADDING - BUTTON_W/2 - 2*PADDING;
+    int SL_H = SEARCH_H;
+    SetWindowPos(GetDlgItem(hwnd, ID_SEARCH_LEFT), 0, 
+        SL_X, SL_Y, SL_W, SL_H, flags);
+
+    int SR_X = GBR_X + PADDING;
+    int SR_Y = SL_Y;
+    int SR_H = SL_H;
+    int SR_W = SL_W;
+    SetWindowPos(GetDlgItem(hwnd, ID_SEARCH_RIGHT), 0, 
+        SR_X, SR_Y, SR_W, SR_H, flags);
+
+    /* Position the listview */
+    int LVL_X = SL_X;
+    int LISTVIEW_Y = SL_Y + SL_H + PADDING;
+    int LISTVIEW_W = SL_W;
+    int LISTVIEW_H = GBL_H - SEARCH_H - PADDING*2 - (SL_Y - GBL_Y);
+    SetWindowPos(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), 0, 
+        LVL_X, LISTVIEW_Y, LISTVIEW_W, LISTVIEW_H, flags);
+
+    int LVR_X = GBR_X + PADDING;
+    SetWindowPos(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), 0, 
+        LVR_X, LISTVIEW_Y, LISTVIEW_W, LISTVIEW_H, flags);
+
+    /* Button Positioning */
+    int BUTTON_X = GBL_X + GBL_W + PADDING;
+
+    int B_PICK_ALL_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*3.5) - PADDING*3;
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_PICK_ALL), 0, 
+        BUTTON_X, B_PICK_ALL_Y, BUTTON_W, BUTTON_H, flags);
+
+    int B_PICK_SELECTED_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*2.5) - PADDING*2;
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_PICK_SELECTED), 0,
+        BUTTON_X, B_PICK_SELECTED_Y, BUTTON_W, BUTTON_H, flags);
+
+    int B_UNPICK_SELECTED_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*1.5) - PADDING;
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_UNPICK_SELECTED), 0, 
+        BUTTON_X, B_UNPICK_SELECTED_Y, BUTTON_W, BUTTON_H, flags);
+
+    int B_UNPICK_ALL_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*0.5);
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_UNPICK_ALL), 0, 
+        BUTTON_X, B_UNPICK_ALL_Y, BUTTON_W, BUTTON_H, flags);
+
+    int B_UNDO_Y = LISTVIEW_Y + LISTVIEW_H/2 + (int)(BUTTON_H*0.5) + PADDING;
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_UNDO), 0, 
+        BUTTON_X, B_UNDO_Y, BUTTON_W, BUTTON_H, flags);
+
+    int B_REDO_Y = LISTVIEW_Y + LISTVIEW_H/2 + (int)(BUTTON_H*1.5) + PADDING*2;
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_REDO), 0, 
+        BUTTON_X, B_REDO_Y, BUTTON_W, BUTTON_H, flags);
+
+    int B_OK_Y = LISTVIEW_Y + LISTVIEW_H/2 + (int)(BUTTON_H*2.5) + PADDING*3;
+    SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_OK), 0, 
+        BUTTON_X, B_OK_Y, BUTTON_W, BUTTON_H, flags);
+
+    /* Position and size the status bar*/
+    SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), WM_SIZE, 0, 0);
+
+    int lparam[5];
+    lparam[0] = GBL_X + GBL_W/2;
+    lparam[1] = GBL_X + GBL_W;
+    lparam[2] = GBR_X;
+    lparam[3] = GBR_X + GBR_W/2;
+    lparam[4] = -1;
+    SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), SB_SETPARTS,  5, (LPARAM)lparam);
+}
+
+void wm_create(HWND hwnd, HINSTANCE hInst) {
+    listview_create(hwnd, hInst, ID_LISTVIEW_LEFT);
+    listview_create(hwnd, hInst, ID_LISTVIEW_RIGHT);
+    search_create(hwnd, hInst, ID_SEARCH_LEFT);
+    search_create(hwnd, hInst, ID_SEARCH_RIGHT);
+    button_create(hwnd, hInst, TEXT(">>"), ID_BUTTON_PICK_ALL);
+    button_create(hwnd, hInst, TEXT(">"), ID_BUTTON_PICK_SELECTED);
+    button_create(hwnd, hInst, TEXT("<"), ID_BUTTON_UNPICK_SELECTED);
+    button_create(hwnd, hInst, TEXT("<<"), ID_BUTTON_UNPICK_ALL);
+    undo_redo_create(hwnd, hInst, TEXT("Undo"), ID_BUTTON_UNDO);
+    undo_redo_create(hwnd, hInst, TEXT("Redo"), ID_BUTTON_REDO);
+    button_create(hwnd, hInst, TEXT("OK"), ID_BUTTON_OK);
+    groupbox_create(hwnd, hInst, TEXT("Inactive Conditions"), ID_GROUPBOX_LEFT);
+    groupbox_create(hwnd, hInst, TEXT("Active Conditions"), ID_GROUPBOX_RIGHT);
+    status_create(hwnd, hInst, ID_STATUSBAR);
+}
+
+void wm_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
     struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-    switch (uMsg) {
-    case WM_CREATE: {
-        HINSTANCE hInst = ((CREATESTRUCT*)lParam)->hInstance;
-        listview_create(hwnd, hInst, ID_LISTVIEW_LEFT);
-        listview_create(hwnd, hInst, ID_LISTVIEW_RIGHT);
-        search_create(hwnd, hInst, ID_SEARCH_LEFT);
-        search_create(hwnd, hInst, ID_SEARCH_RIGHT);
-        button_create(hwnd, hInst, TEXT(">>"), ID_BUTTON_PICK_ALL);
-        button_create(hwnd, hInst, TEXT(">"), ID_BUTTON_PICK_SELECTED);
-        button_create(hwnd, hInst, TEXT("<"), ID_BUTTON_UNPICK_SELECTED);
-        button_create(hwnd, hInst, TEXT("<<"), ID_BUTTON_UNPICK_ALL);
-        undo_redo_create(hwnd, hInst, TEXT("Undo"), ID_BUTTON_UNDO);
-        undo_redo_create(hwnd, hInst, TEXT("Redo"), ID_BUTTON_REDO);
-        button_create(hwnd, hInst, TEXT("OK"), ID_BUTTON_OK);
-        groupbox_create(hwnd, hInst, TEXT("Inactive Conditions"), ID_GROUPBOX_LEFT);
-        groupbox_create(hwnd, hInst, TEXT("Active Conditions"), ID_GROUPBOX_RIGHT);
-        status_create(hwnd, hInst, ID_STATUSBAR);
-
-        } return 0;
-    case WM_DESTROY:{
-        PostQuitMessage(0);
-        } return 0;
-    case WM_PAINT: {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-        FillRect(hdc, &ps.rcPaint, (HBRUSH) (COLOR_WINDOW+1));
-        EndPaint(hwnd, &ps);
-        } return 0;
-    case WM_CTLCOLORSTATIC: {
-            HBRUSH *hbrBkgnd = (HBRUSH*)GetClassLongPtr(hwnd, GCLP_HBRBACKGROUND);
-            return (INT_PTR)hbrBkgnd;
-        }
-    case WM_SIZE: {
-        UINT flags = SWP_NOZORDER | SWP_NOACTIVATE;
-        int WINDOW_H = HIWORD(lParam);
-        int WINDOW_W = LOWORD(lParam);
-        int GUTTER = 12;
-        int PADDING = 8;
-        int BUTTON_W = 120;
-        int BUTTON_H = 32;
-        int SEARCH_H = 23;
-        int STATUS_H = 20;
-
-        /* Get dimensions of status bar on the bottom */
-        RECT sb_rect;
-        SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), SB_GETRECT , 0, (LPARAM)&sb_rect);
-        int SB_H = sb_rect.bottom - sb_rect.top;
-
-        /* groupbox positioning */
-        int GBL_X = GUTTER;
-        int GBL_Y = GUTTER;
-        int GBL_W = WINDOW_W/2 - GUTTER - PADDING - BUTTON_W/2;
-        int GBL_H = WINDOW_H - 2*GUTTER - SB_H;
-        SetWindowPos(GetDlgItem(hwnd, ID_GROUPBOX_LEFT), 0, 
-            GBL_X, GBL_Y, GBL_W, GBL_H, flags);
-
-        int GBR_X = GBL_X + GBL_W + BUTTON_W + PADDING*2;
-        int GBR_Y = GUTTER;
-        int GBR_W = GBL_W;
-        int GBR_H = GBL_H;
-        SetWindowPos(GetDlgItem(hwnd, ID_GROUPBOX_RIGHT), 0, 
-            GBR_X, GBR_Y, GBR_W, GBR_H, flags);
-
-        /* Position search bars */
-        int SL_X = GUTTER + PADDING;
-        int SL_Y = GBL_Y + 3*PADDING;
-        int SL_W = WINDOW_W/2 - GUTTER - PADDING - BUTTON_W/2 - 2*PADDING;
-        int SL_H = SEARCH_H;
-        SetWindowPos(GetDlgItem(hwnd, ID_SEARCH_LEFT), 0, 
-            SL_X, SL_Y, SL_W, SL_H, flags);
-
-        int SR_X = GBR_X + PADDING;
-        int SR_Y = SL_Y;
-        int SR_H = SL_H;
-        int SR_W = SL_W;
-        SetWindowPos(GetDlgItem(hwnd, ID_SEARCH_RIGHT), 0, 
-            SR_X, SR_Y, SR_W, SR_H, flags);
-
-        /* Position the listview */
-        int LVL_X = SL_X;
-        int LISTVIEW_Y = SL_Y + SL_H + PADDING;
-        int LISTVIEW_W = SL_W;
-        int LISTVIEW_H = GBL_H - SEARCH_H - PADDING*2 - (SL_Y - GBL_Y);
-        SetWindowPos(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), 0, 
-            LVL_X, LISTVIEW_Y, LISTVIEW_W, LISTVIEW_H, flags);
-
-        int LVR_X = GBR_X + PADDING;
-        SetWindowPos(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), 0, 
-            LVR_X, LISTVIEW_Y, LISTVIEW_W, LISTVIEW_H, flags);
-
-        /* Button Positioning */
-        int BUTTON_X = GBL_X + GBL_W + PADDING;
-
-        int B_PICK_ALL_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*3.5) - PADDING*3;
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_PICK_ALL), 0, 
-            BUTTON_X, B_PICK_ALL_Y, BUTTON_W, BUTTON_H, flags);
-
-        int B_PICK_SELECTED_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*2.5) - PADDING*2;
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_PICK_SELECTED), 0,
-            BUTTON_X, B_PICK_SELECTED_Y, BUTTON_W, BUTTON_H, flags);
-
-        int B_UNPICK_SELECTED_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*1.5) - PADDING;
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_UNPICK_SELECTED), 0, 
-            BUTTON_X, B_UNPICK_SELECTED_Y, BUTTON_W, BUTTON_H, flags);
-
-        int B_UNPICK_ALL_Y = LISTVIEW_Y + LISTVIEW_H/2 - (int)(BUTTON_H*0.5);
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_UNPICK_ALL), 0, 
-            BUTTON_X, B_UNPICK_ALL_Y, BUTTON_W, BUTTON_H, flags);
-
-        int B_UNDO_Y = LISTVIEW_Y + LISTVIEW_H/2 + (int)(BUTTON_H*0.5) + PADDING;
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_UNDO), 0, 
-            BUTTON_X, B_UNDO_Y, BUTTON_W, BUTTON_H, flags);
-
-        int B_REDO_Y = LISTVIEW_Y + LISTVIEW_H/2 + (int)(BUTTON_H*1.5) + PADDING*2;
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_REDO), 0, 
-            BUTTON_X, B_REDO_Y, BUTTON_W, BUTTON_H, flags);
-
-        int B_OK_Y = LISTVIEW_Y + LISTVIEW_H/2 + (int)(BUTTON_H*2.5) + PADDING*3;
-        SetWindowPos(GetDlgItem(hwnd, ID_BUTTON_OK), 0, 
-            BUTTON_X, B_OK_Y, BUTTON_W, BUTTON_H, flags);
-
-        /* Position and size the status bar*/
-        SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), WM_SIZE, 0, 0);
-
-        int lparam[5];
-        lparam[0] = GBL_X + GBL_W/2;
-        lparam[1] = GBL_X + GBL_W;
-        lparam[2] = GBR_X;
-        lparam[3] = GBR_X + GBR_W/2;
-        lparam[4] = -1;
-        SendMessage(GetDlgItem(hwnd, ID_STATUSBAR), SB_SETPARTS,  5, (LPARAM)lparam);
-
-        } return 0;
-    case WM_NOTIFY: {
-        LPNMHDR lpnmhdr = (LPNMHDR)lParam;
-        switch (lpnmhdr->idFrom) {
-        case ID_LISTVIEW_LEFT:
-        case ID_LISTVIEW_RIGHT:
-            condlist *list = lpnmhdr->idFrom == ID_LISTVIEW_LEFT ? s->left : s->right;
-            switch (lpnmhdr->code) {
+    LPNMHDR lpnmhdr = (LPNMHDR)lParam;
+    switch (lpnmhdr->idFrom) {
+    case ID_LISTVIEW_LEFT:
+    case ID_LISTVIEW_RIGHT:
+        condlist *list = lpnmhdr->idFrom == ID_LISTVIEW_LEFT ? s->left : s->right;
+        switch (lpnmhdr->code) {
             case LVN_GETDISPINFO:
                 NMLVDISPINFO* lpdi = (NMLVDISPINFO*)lParam;
                 {
@@ -460,158 +442,187 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         hItem.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
                         Header_SetItem(hHeader, 0, &hItem);
                         break;
-
                 }
                 update(hwnd);
                 break;
+        }
+        break;
+        
+    case ID_BUTTON_UNDO:
+        if (lpnmhdr->code == BCN_DROPDOWN ) {
+            NMBCDROPDOWN* pDropDown = (NMBCDROPDOWN*)lParam;
+            POINT pt;
+            pt.x = pDropDown->rcButton.left;
+            pt.y = pDropDown->rcButton.bottom;
+            ClientToScreen(pDropDown->hdr.hwndFrom, &pt);
+    
+            /* Create a menu and add items. */
+            HMENU hSplitMenu = CreatePopupMenu();
+            wchar_t msg[256];
+            struct strbuf b = MEMBUF(msg, sizeof(msg));
+
+            int undo_count = 0;
+            for (int i=s->buf_cur-1; i >= 0; i--){
+                b.len = 0;
+                APPEND_STR(&b, L"Active Count: ");
+                append_long(&b, s->undo_count_list[i]);
+                APPEND_STR(&b, L"\0"); 
+                AppendMenu(hSplitMenu, MF_BYPOSITION, ++undo_count, msg);
             }
+    
+            /* Display the menu. */
+            undo_count = TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD , pt.x, pt.y, 0, hwnd, NULL);
+
+            /* perform the undo */
+            for (int i=0; i<undo_count; i++){
+                state_undo(s);
+            }
+            update(hwnd);
+        }
+        break;
+    case ID_BUTTON_REDO:
+        if (lpnmhdr->code == BCN_DROPDOWN ) {
+            NMBCDROPDOWN* pDropDown = (NMBCDROPDOWN*)lParam;
+            POINT pt;
+            pt.x = pDropDown->rcButton.left;
+            pt.y = pDropDown->rcButton.bottom;
+            ClientToScreen(pDropDown->hdr.hwndFrom, &pt);
+    
+            /* Create a menu and add items. */
+            HMENU hSplitMenu = CreatePopupMenu();
+            wchar_t msg[256];
+            struct strbuf b = MEMBUF(msg, sizeof(msg));
+
+            int redo_count = 0;
+            for (int i=s->buf_cur+1; i<s->buf_used; i++){
+                b.len = 0;
+                APPEND_STR(&b, L"Active Count: ");
+                append_long(&b, s->undo_count_list[i]);
+                APPEND_STR(&b, L"\0"); 
+                AppendMenu(hSplitMenu, MF_BYPOSITION, ++redo_count, msg);
+            }
+    
+            /* Display the menu. */
+            redo_count = TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD , pt.x, pt.y, 0, hwnd, NULL);
+
+            /* perform the undo */
+            for (int i=0; i<redo_count; i++){
+                state_redo(s);
+            }
+            update(hwnd);
+        }
+        break;
+    }
+}
+
+void wm_command(HWND hwnd, WPARAM wParam, LPARAM lParam) {
+    struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    switch (LOWORD(wParam)){
+        case ID_BUTTON_PICK_ALL:
+            if (HIWORD(wParam) == BN_CLICKED) {
+                if ( condlist_len(s->left) > 0) state_advance(s);
+                for (int i = 0; i < condlist_len(s->left); i++) {
+                    condlist_flip(s->left, i);
+                }
+                if ( condlist_len(s->left) > 0) update(hwnd);
+            }
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
             break;
-            
-        case ID_BUTTON_UNDO:
-            if (lpnmhdr->code == BCN_DROPDOWN ) {
-                NMBCDROPDOWN* pDropDown = (NMBCDROPDOWN*)lParam;
-                POINT pt;
-                pt.x = pDropDown->rcButton.left;
-                pt.y = pDropDown->rcButton.bottom;
-                ClientToScreen(pDropDown->hdr.hwndFrom, &pt);
-        
-                /* Create a menu and add items. */
-                HMENU hSplitMenu = CreatePopupMenu();
-                wchar_t msg[256];
-                struct strbuf b = MEMBUF(msg, sizeof(msg));
-
-                int undo_count = 0;
-                for (int i=s->buf_cur-1; i >= 0; i--){
-                    b.len = 0;
-                    APPEND_STR(&b, L"Active Count: ");
-                    append_long(&b, s->undo_count_list[i]);
-                    APPEND_STR(&b, L"\0"); 
-                    AppendMenu(hSplitMenu, MF_BYPOSITION, ++undo_count, msg);
+        case ID_BUTTON_UNPICK_ALL:
+            if (HIWORD(wParam) == BN_CLICKED) {
+                if ( condlist_len(s->right) > 0) state_advance(s);
+                for (int i = 0; i < condlist_len(s->right); i++) {
+                    condlist_flip(s->right, i);
                 }
-        
-                /* Display the menu. */
-                undo_count = TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD , pt.x, pt.y, 0, hwnd, NULL);
-
-                /* perform the undo */
-                for (int i=0; i<undo_count; i++){
-                    state_undo(s);
+                if ( condlist_len(s->right) > 0) update(hwnd);
+            }
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
+            break;
+        case ID_BUTTON_PICK_SELECTED:
+            if (HIWORD(wParam) == BN_CLICKED) {
+                int count = ListView_GetSelectedCount(GetDlgItem(hwnd, ID_LISTVIEW_LEFT));
+                if (count > 0) state_advance(s);
+                int index = -1;
+                for (int i = 0; i < count; i++) {
+                    index = ListView_GetNextItem(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), index, LVNI_SELECTED);
+                    condlist_flip(s->left, index);
                 }
+                if (count > 0) update(hwnd);
+            }
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
+            break;
+        case ID_BUTTON_UNPICK_SELECTED:
+            if (HIWORD(wParam) == BN_CLICKED) {
+                int count = ListView_GetSelectedCount(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT));
+                if (count > 0) state_advance(s);
+                int index = -1;
+                for (int i = 0; i < count; i++) {
+                    index = ListView_GetNextItem(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), index, LVNI_SELECTED);
+                    condlist_flip(s->right, index);
+                }
+                if (count > 0) update(hwnd);
+            }
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
+            ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
+            break;
+        case ID_SELECTALL:
+            ListView_SetItemState(GetFocus(), -1, LVIS_SELECTED, LVIS_SELECTED);
+            break;
+        case ID_SEARCH_LEFT:
+        case ID_SEARCH_RIGHT:
+            if (HIWORD(wParam) == EN_CHANGE) {
                 update(hwnd);
             }
+            break;
+        case ID_BUTTON_OK:
+            s->ok = true;
+            PostQuitMessage(0);
+            break;
+        case ID_BUTTON_UNDO:
+            state_undo(s);
+            update(hwnd);
             break;
         case ID_BUTTON_REDO:
-            if (lpnmhdr->code == BCN_DROPDOWN ) {
-                NMBCDROPDOWN* pDropDown = (NMBCDROPDOWN*)lParam;
-                POINT pt;
-                pt.x = pDropDown->rcButton.left;
-                pt.y = pDropDown->rcButton.bottom;
-                ClientToScreen(pDropDown->hdr.hwndFrom, &pt);
-        
-                /* Create a menu and add items. */
-                HMENU hSplitMenu = CreatePopupMenu();
-                wchar_t msg[256];
-                struct strbuf b = MEMBUF(msg, sizeof(msg));
-
-                int redo_count = 0;
-                for (int i=s->buf_cur+1; i<s->buf_used; i++){
-                    b.len = 0;
-                    APPEND_STR(&b, L"Active Count: ");
-                    append_long(&b, s->undo_count_list[i]);
-                    APPEND_STR(&b, L"\0"); 
-                    AppendMenu(hSplitMenu, MF_BYPOSITION, ++redo_count, msg);
-                }
-        
-                /* Display the menu. */
-                redo_count = TrackPopupMenu(hSplitMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD , pt.x, pt.y, 0, hwnd, NULL);
-
-                /* perform the undo */
-                for (int i=0; i<redo_count; i++){
-                    state_redo(s);
-                }
-                update(hwnd);
-            }
+            state_redo(s);
+            update(hwnd);
             break;
-        }
-        }return 0;
-    case WM_COMMAND:{
-        switch (LOWORD(wParam)){
-            case ID_BUTTON_PICK_ALL:
-                if (HIWORD(wParam) == BN_CLICKED) {
-                    if ( condlist_len(s->left) > 0) state_advance(s);
-                    for (int i = 0; i < condlist_len(s->left); i++) {
-                        condlist_flip(s->left, i);
-                    }
-                    if ( condlist_len(s->left) > 0) update(hwnd);
-                }
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
-                break;
-            case ID_BUTTON_UNPICK_ALL:
-                if (HIWORD(wParam) == BN_CLICKED) {
-                    if ( condlist_len(s->right) > 0) state_advance(s);
-                    for (int i = 0; i < condlist_len(s->right); i++) {
-                        condlist_flip(s->right, i);
-                    }
-                    if ( condlist_len(s->right) > 0) update(hwnd);
-                }
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
-                break;
-            case ID_BUTTON_PICK_SELECTED:
-                if (HIWORD(wParam) == BN_CLICKED) {
-                    int count = ListView_GetSelectedCount(GetDlgItem(hwnd, ID_LISTVIEW_LEFT));
-                    if (count > 0) state_advance(s);
-                    int index = -1;
-                    for (int i = 0; i < count; i++) {
-                        index = ListView_GetNextItem(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), index, LVNI_SELECTED);
-                        condlist_flip(s->left, index);
-                    }
-                    if (count > 0) update(hwnd);
-                }
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
-                break;
-            case ID_BUTTON_UNPICK_SELECTED:
-                if (HIWORD(wParam) == BN_CLICKED) {
-                    int count = ListView_GetSelectedCount(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT));
-                    if (count > 0) state_advance(s);
-                    int index = -1;
-                    for (int i = 0; i < count; i++) {
-                        index = ListView_GetNextItem(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), index, LVNI_SELECTED);
-                        condlist_flip(s->right, index);
-                    }
-                    if (count > 0) update(hwnd);
-                }
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_LEFT), -1, 0, LVIS_SELECTED);
-                ListView_SetItemState(GetDlgItem(hwnd, ID_LISTVIEW_RIGHT), -1, 0, LVIS_SELECTED);
-                break;
-            case ID_SELECTALL:
-                ListView_SetItemState(GetFocus(), -1, LVIS_SELECTED, LVIS_SELECTED);
-                break;
-            case ID_SEARCH_LEFT:
-            case ID_SEARCH_RIGHT:
-                if (HIWORD(wParam) == EN_CHANGE) {
-                    update(hwnd);
-                }
-                break;
-            case ID_BUTTON_OK:
-                s->ok = true;
-                PostQuitMessage(0);
-                break;
-            case ID_BUTTON_UNDO:
-                state_undo(s);
-                update(hwnd);
-                break;
-            case ID_BUTTON_REDO:
-                state_redo(s);
-                update(hwnd);
-                break;
-        }
     }
-    return 0;
+}
 
+LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_CREATE: 
+            wm_create(hwnd, ((CREATESTRUCT*)lParam)->hInstance);
+            break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+        case WM_CTLCOLORSTATIC:
+            HBRUSH *hbrBkgnd = (HBRUSH*)GetClassLongPtr(hwnd, GCLP_HBRBACKGROUND);
+            return (INT_PTR)hbrBkgnd;
+        case WM_PAINT: 
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            FillRect(hdc, &ps.rcPaint, (HBRUSH) (COLOR_WINDOW+1));
+            EndPaint(hwnd, &ps);
+            break;
+        case WM_SIZE:
+            wm_size(hwnd, HIWORD(lParam), LOWORD(lParam));
+            break;
+        case WM_NOTIFY: 
+            wm_notify(hwnd, wParam, lParam); 
+            break;
+        case WM_COMMAND:
+            wm_command(hwnd, wParam, lParam);
+            break;
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return NULL;
 }
 
 int _DllMainCRTStartup(void) {
