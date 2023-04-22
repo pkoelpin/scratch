@@ -74,6 +74,7 @@ struct condlist {
 
 condlist *condlist_create(int *id, const char * const *title, int n, bool isactive) {
     struct condlist *list = (struct condlist*)HeapAlloc(GetProcessHeap(), 0, sizeof(struct condlist));
+
     list->id = id;
     list->title = title;
     list->n = n;
@@ -94,6 +95,14 @@ void condlist_free(condlist *list) {
     HeapFree(GetProcessHeap(), 0, list->idx);
     HeapFree(GetProcessHeap(), 0, list->idx_sorted);
     HeapFree(GetProcessHeap(), 0, list);
+}
+
+static bool in_range(int val, int from, int to, int by) {
+    
+}
+
+void condlist_add_range(condlist *list, int from, int to, int by) {
+
 }
 
 /* The 'i' is the index in the original list */

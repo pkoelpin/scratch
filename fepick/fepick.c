@@ -1,6 +1,5 @@
 /* https://www.icoconverter.com/ */
 
-
 /* This is so the dll will use common controls V6 */
 #define ISOLATION_AWARE_ENABLED 1
 
@@ -34,9 +33,10 @@ struct state {
     int buf_len;
     int *undo_count_list;
     bool ok;
+    HINSTANCE hInst; 
 };
 
-struct state* state_create(int *id, const char * const *title, int n) {
+struct state* state_create(int *id, const char * const *title, int n, HINSTANCE hInst) {
     struct state *s = (struct state*)HeapAlloc(GetProcessHeap(), 0, sizeof(struct state));
     s->n = n;
     s->buf = (int*)HeapAlloc(GetProcessHeap(), 0, n*sizeof(int));
@@ -50,6 +50,7 @@ struct state* state_create(int *id, const char * const *title, int n) {
     s->left = condlist_create(s->buf, title, n, false);
     s->right = condlist_create(s->buf, title, n, true);
     s->ok = false;
+    s->hInst = hInst;
     return s;
 }
 
@@ -155,10 +156,6 @@ void update(HWND hwnd) {
     EnableWindow(GetDlgItem(hwnd, ID_BUTTON_REDO), s->buf_cur != s->buf_used - 1);
 }
 
-void sort(HWND hwnd) {
-    struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-}
-
 /* Generic function to create all the buttons for the window */
 void button_create(HWND hwnd_parent, HINSTANCE hInst, LPCTSTR text, long long id) {
     CreateWindowEx(
@@ -220,17 +217,6 @@ void search_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
 
     /* This function only comes in UTF-16, so that's why it's L"Search" */
     Edit_SetCueBannerText(hwnd, L"Search");
-}
-
-void separator_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
-    HWND hwnd = CreateWindowEx(
-        0,
-        TEXT("STATIC"),
-        NULL,
-        WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ | SS_SUNKEN,
-        0, 0, 0, 0,
-        hwnd_parent, (HMENU)id, hInst, NULL
-    );
 }
 
 void status_create(HWND hwnd_parent, HINSTANCE hInst, long long id) {
@@ -359,10 +345,10 @@ void wm_create(HWND hwnd, HINSTANCE hInst) {
     listview_create(hwnd, hInst, ID_LISTVIEW_RIGHT);
     search_create(hwnd, hInst, ID_SEARCH_LEFT);
     search_create(hwnd, hInst, ID_SEARCH_RIGHT);
-    button_create(hwnd, hInst, TEXT(">>"), ID_BUTTON_PICK_ALL);
+    //button_create(hwnd, hInst, TEXT(">>"), ID_BUTTON_PICK_ALL);
     button_create(hwnd, hInst, TEXT(">"), ID_BUTTON_PICK_SELECTED);
     button_create(hwnd, hInst, TEXT("<"), ID_BUTTON_UNPICK_SELECTED);
-    button_create(hwnd, hInst, TEXT("<<"), ID_BUTTON_UNPICK_ALL);
+    //button_create(hwnd, hInst, TEXT("<<"), ID_BUTTON_UNPICK_ALL);
     undo_redo_create(hwnd, hInst, TEXT("Undo"), ID_BUTTON_UNDO);
     undo_redo_create(hwnd, hInst, TEXT("Redo"), ID_BUTTON_REDO);
     button_create(hwnd, hInst, TEXT("OK"), ID_BUTTON_OK);
@@ -380,6 +366,14 @@ void wm_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
     case ID_LISTVIEW_RIGHT:
         condlist *list = lpnmhdr->idFrom == ID_LISTVIEW_LEFT ? s->left : s->right;
         switch (lpnmhdr->code) {
+            case NM_RCLICK:
+                HMENU hmenu = LoadMenu(s->hInst, MAKEINTRESOURCE(ID_RIGHTCLICK_MENU)); 
+                HMENU hmenuTrackPopup = GetSubMenu(hmenu, 0); 
+                POINT pt;
+                GetCursorPos(&pt);
+                TrackPopupMenu(hmenuTrackPopup, TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, hwnd, NULL); 
+                DestroyMenu(hmenu); 
+                break;
             case LVN_GETDISPINFO:
                 NMLVDISPINFO* lpdi = (NMLVDISPINFO*)lParam;
                 {
@@ -515,6 +509,30 @@ void wm_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
     }
 }
 
+/* Handle the range selection dialog */
+INT_PTR CALLBACK RangeProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam){
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message) {
+        case WM_INITDIALOG:
+            SetDlgItemText(hDlg, ID_EDIT_BY, "1");
+            SetDlgItemText(hDlg, ID_EDIT_FROM, "1");
+            return (INT_PTR)TRUE;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDOK) {
+                int from = GetDlgItemInt(hDlg, ID_EDIT_FROM, NULL, false);
+                int to = GetDlgItemInt(hDlg, ID_EDIT_TO, NULL, false);
+                int by = GetDlgItemInt(hDlg, ID_EDIT_BY, NULL, false);
+                EndDialog(hDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            } else if (LOWORD(wParam) == IDCANCEL) {
+                EndDialog(hDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+            break;
+    }
+    return (INT_PTR)FALSE;
+}
+
 void wm_command(HWND hwnd, WPARAM wParam, LPARAM lParam) {
     struct state *s = (struct state*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
@@ -589,6 +607,9 @@ void wm_command(HWND hwnd, WPARAM wParam, LPARAM lParam) {
         case ID_BUTTON_REDO:
             state_redo(s);
             update(hwnd);
+            break;
+        case ID_RANGEBOX:
+            DialogBox(s->hInst, MAKEINTRESOURCEW(ID_RANGEBOX), hwnd, RangeProc);
             break;
     }
 }
@@ -665,7 +686,7 @@ int fepick_case(int *id, char **title, int n) {
     );
 
     /* Set up the struct that holds the state info for the condition list */
-    struct state *s = state_create(id, title, n);
+    struct state *s = state_create(id, title, n, hinstance);
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)s);
 
     ShowWindow(hwnd, SW_SHOW);
