@@ -8,6 +8,7 @@ ISOLATIONAWARE_MANIFEST_RESOURCE_ID  RT_MANIFEST "manifest.xml"
 ID_ACCEL_GLOBAL ACCELERATORS
 BEGIN
     "A", ID_SELECTALL, CONTROL, VIRTKEY
+    "C", ID_COPY, CONTROL, VIRTKEY
     "Z", ID_BUTTON_UNDO, CONTROL, VIRTKEY
     "Y", ID_BUTTON_REDO, CONTROL, VIRTKEY
 END
@@ -17,9 +18,9 @@ BEGIN
     POPUP "Listview Options"
     BEGIN
         MENUITEM "Select All\tCtrl+A",       ID_SELECTALL
-        MENUITEM "Copy\tCtrl+C",             ID_SELECTALL
-        MENUITEM "Paste\tCtrl+V",            ID_SELECTALL
-        MENUITEM "Pick From File\tCtrl+O",   ID_BUTTON_OK
+        MENUITEM "Copy\tCtrl+C",             ID_COPY
+        MENUITEM "Paste\tCtrl+V",            ID_PASTE
+        MENUITEM "Pick From File\tCtrl+O",   ID_FROM_FILE
         MENUITEM "Pick From Range\tCtrl+R",  ID_RANGEBOX
     END
 END
@@ -36,7 +37,7 @@ BEGIN
     EDITTEXT         ID_EDIT_TO, 30, 27, 63, 14
     EDITTEXT         ID_EDIT_BY, 30, 47, 63, 14 
     DEFPUSHBUTTON   "OK",IDOK,53,67,40,14,WS_GROUP
-    DEFPUSHBUTTON   "Cancel",IDCANCEL,7,67,40,14,WS_GROUP
+    PUSHBUTTON   "Cancel",IDCANCEL,7,67,40,14,WS_GROUP
 END
 
 VS_VERSION_INFO VERSIONINFO

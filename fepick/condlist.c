@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include "condlist.h"
 
+#include <stdio.h>
+
 /*
 spmatch - String Pattern Match
 https://dogankurt.com/wildcard.html
@@ -97,14 +99,6 @@ void condlist_free(condlist *list) {
     HeapFree(GetProcessHeap(), 0, list);
 }
 
-static bool in_range(int val, int from, int to, int by) {
-    
-}
-
-void condlist_add_range(condlist *list, int from, int to, int by) {
-
-}
-
 /* The 'i' is the index in the original list */
 static const char *condlist_title(condlist *list, int i) {
     if ((list->title == NULL) ||  (list->title[i] == NULL)) {
@@ -189,6 +183,27 @@ void condlist_update(condlist *list, const char *filter) {
     }
 }
 
+static bool in_range(int val, int from, int to, int by) {
+    if (val < from) {
+        return false;
+    } else if (val > to) {
+        return false;
+    } else if ((val-from) % by != 0){
+        return false;
+    }
+    return true;
+}
+
+void condlist_add_range(condlist *list, int from, int to, int by) {  
+    for (int i=0; i<list->n; i++) {
+        if (in_range(abs(list->id[i]), from, to, by))
+        {
+            list->id[i] = list->isactive ? abs(list->id[i]) : -abs(list->id[i]);
+        } 
+    }
+    
+}
+
 /* Update the base pointer */
 void condlist_set_id(condlist *list, int *id) {
     list->id = id;
@@ -206,6 +221,7 @@ const char* condlist_get_title(condlist *list, int index) {
 void condlist_flip(condlist *list, int index) {
      list->id[list->idx[index]] = -list->id[list->idx[index]];
 }
+
 
 int condlist_len(condlist *list) {
     return list->len;

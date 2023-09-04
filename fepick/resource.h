@@ -27,5 +27,10 @@
 #define ID_EDIT_FROM                 224
 #define ID_EDIT_TO                   225
 #define ID_EDIT_BY                   226
+#define ID_COPY                      227
+#define ID_PASTE                     228
+#define ID_FROM_FILE                 229
+
+
 
 #endif

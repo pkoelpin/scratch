@@ -1,0 +1,60 @@
+<html>
+<body>
+
+
+<label for="diameter">Diamter:</label>
+<input type="number" id="diameter" name="diameter" step="any" value="400">
+
+<br>
+  
+<table id="tbl_id" valign:"top">
+    <tr>
+        <th>Part</th>
+        <th>thk</th>
+        <th>Fx</th>
+        <th>Fy</th>
+    </tr>
+    <tr>
+        <td><input type="text" id="part1" name="part1" value="frame"></td>
+        <td><input type="number" id="thk1" name="thk1" step="any" value="0.25"></td>
+        <td><input type="number" id="fx1" name="fx1" step="any" value="100"></td>
+        <td><input type="number" id="fy1" name="fy1" step="any" value="100"></td>
+    </tr>
+    <tr>
+        <td><input type="text" id="part2" name="part2" value="longeron"></td>
+        <td><input type="number" id="thk1" name="thk2" step="any" value="0.25"></td>
+        <td><input type="number" id="fx2" name="fx2" step="any" value="-100"></td>
+        <td><input type="number" id="fy2" name="fy2" step="any" value="-100"></td>
+    </tr>
+    
+</table>
+
+<br>
+
+<button onclick="doSomething()"> submit</button>
+
+<br><br>
+
+<img src="HST12.svg" id="bolt" width="200">
+
+<script>
+function doSomething() {
+    var diameter = document.getElementById("diameter").value;
+    var table = document.getElementById("tbl_id");
+    let thk = 0.0;
+    for (var i = 0, row; row = table.rows[i]; i++) {
+        thk += row.cells[2];
+    }
+    <!-- document.getElementById('bolt').setAttribute("height", diameter); -->
+    
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute('style', 'border: 1px solid black');
+    svg.setAttribute('width', '600');
+    svg.setAttribute('height', '250');
+    svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+    document.body.appendChild(svg);
+    
+    return false;
+    
+}
+</script>

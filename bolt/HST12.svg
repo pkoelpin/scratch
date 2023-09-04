@@ -1,0 +1,54 @@
+<svg id="bolt"
+     version="1.1" 
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+     
+    <svg id="shank" viewBox="-50 0 200 100" preserveAspectRatio="none" >
+        <path d="M 25 0 v 100" stroke="black" />
+        <path d="M 75 0 v 100" stroke="black" />
+    </svg>
+    
+    <svg id="head" viewBox="-50 0 200 20" preserveAspectRatio="xMidYMin">
+        <rect y="0" width="100%" height = "100%" fill="white" />
+        <path d="M 10 0.5 h 80 l 9.5 9.5 v 10 h -99 v -10 Z" stroke="black" fill ="transparent"/>
+        <path d="M 0.5 10 h 99" stroke="black"/>
+    </svg>
+    
+    <svg id="tail" viewBox="-50 -1 200 71" preserveAspectRatio="xMidYMax" >
+        <rect y="0" width="100%" height = "100%" fill="white" />
+        <path d="M 75 -0.5 v 1 l -5 5 v 60 l -4 4 h -32 l -4 -4 v -60 l -5 -5 v -1" stroke="black" fill ="transparent"/>
+        <path d="M 30 5.5 h 40" stroke="black"/>
+        <path d="M 30 13 h 40" stroke="black"/>
+        <path d="M 30 20.5 h 40" stroke="black"/>
+        <path d="M 30 28 h 40" stroke="black"/>
+        <path d="M 30 35.5 h 40" stroke="black"/>
+        <path d="M 30 43 h 40" stroke="black"/>
+        <path d="M 30 50.5 h 40" stroke="black"/>
+        <path d="M 30 58 h 40" stroke="black"/>
+        <path d="M 30 65.5 h 40" stroke="black"/>
+        <path d="M 35 9.25  h 30" stroke = "black" />
+        <path d="M 35 16.75 h 30" stroke = "black" />
+        <path d="M 35 24.25 h 30" stroke = "black" />
+        <path d="M 35 31.75 h 30" stroke = "black" />
+        <path d="M 35 39.25 h 30" stroke = "black" />
+        <path d="M 35 46.75 h 30" stroke = "black" />
+        <path d="M 35 54.25 h 30" stroke = "black" />
+        <path d="M 35 61.75 h 30" stroke = "black" />
+    </svg>
+    
+    <pattern id="diagonalHatch" width="5" height="4" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+    <line x1="2.5" y1="0" x2="2.5" y2="10" style="stroke:black; stroke-width:1" />
+    </pattern>
+    
+    <svg id="nut" viewBox="-50 -1 200 71" preserveAspectRatio="xMidYMax" >
+        <path d="M 0.5 0 l 22.5 0 v 15 l 7 7 v 40 h -23 v -36 l -6.5 -6.5 z" stroke="black" fill="gray"/>
+        <path d="M 99.5 0 l -22.5 0 v 15 l -7 7 v 40 h 23 v -36 l 6.5 -6.5 z" stroke="black" fill="gray"/>
+    </svg>
+    
+    <svg viewBox="-50 0 200 100" preserveAspectRatio="xMidYMin">
+        <path d="M -40 20 h 65 v 40 h -65 v -17 l -7 -2 l 14 -2 l -7 -2 z" stroke="black" fill ="transparent"/>
+    </svg>
+    
+    
+    
+</svg>
