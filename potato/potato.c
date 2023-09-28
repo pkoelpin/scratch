@@ -86,7 +86,7 @@ void node_delete(struct node *n) {
     if (n->next != NULL) {
         n->next->prev = n->prev;
     }
-    if (n->prev != NULL )
+    if (n->prev != NULL)
     {
         n->prev->next = n->next;
     }
@@ -224,6 +224,7 @@ struct node* insert(struct node *head, struct point *p) {
         return head;
     }
 
+    /* All other cases*/
     struct node *cur = head->next->next;
     while (cur != head) {
         struct node *prev = cur->prev;
