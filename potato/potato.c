@@ -115,20 +115,31 @@ void node_insert_after(struct node *this, struct node *new) {
 }
 
 void node_print_all(struct node *n) {
+    printf("-----\n");
     struct node *head = n;
     for (;;) {
         PRINT_POINT(n->p);
         n = n->next;
         if (n == head) break;
     }
+    printf("-----\n");
 }
 
-float cross(struct point p0, struct point p1, struct point p2){
+float cross(struct point p0, struct point p1, struct point p2) {
     float dx1 = p1.f[0] - p0.f[0];
     float dy1 = p1.f[1] - p0.f[1];
     float dx2 = p2.f[0] - p0.f[0];
     float dy2 = p2.f[1] - p0.f[1];
     return dx1*dy2 - dx2*dy1;
+}
+
+void node_check(struct node *head) {
+    struct node *cur = head;
+    do {
+        float x = cross(*cur->p, *cur->next->p, *cur->next->next->p);
+        assert(x > 0);
+        cur = cur->next;
+    } while (cur->next == head);
 }
 
 float distance(struct point p1, struct point p2) {
@@ -138,7 +149,7 @@ float distance(struct point p1, struct point p2) {
 }
 
 struct node* insert(struct node *head, struct point *p) {
-    /* special case if we don't have any points defined */
+    /* Adding first node */
     if (head->p == NULL) {
         head->p = p;
         head->next = head;
@@ -146,66 +157,36 @@ struct node* insert(struct node *head, struct point *p) {
         return head;
     }
 
-    /* If there is already a point in the first node, create a new node to insert */
-    struct node *n = node_create(p);
-
     /* Adding second node */
     if (head->next == head) {
-        /* by deafult put it after the head node*/
-        node_insert_after(head, n);
-        float x1 = head->p->f[0];
-        float y1 = head->p->f[1];
-        float x2 = n->p->f[0];
-        float y2 = n->p->f[1];
-
-        /* then check to see which one should be the head */
-        if ((x1 == x2) && (y1 == y2)) {
-            node_delete(head);
-            return n;
-        } else if (y1 < y2) {
-            return head;
-        } else if (y1 > y2) {
-            return n;
-        } else if ((y1 == y2) && (x1 < x2)) {
-            return head;
-        } else {
-            return n;
-        }
-    }
-
-    /* check to see if the new node is lower and put it in */
-    float x1 = head->p->f[0];
-    float y1 = head->p->f[1];
-    float x2 = n->p->f[0];
-    float y2 = n->p->f[1];
-    if (y2 <= y1) {
-        if ((x1 == x2) && (y1 == y2)) {
+        struct node *n = node_create(p);
+        if (distance(*head->p, *p) == 0.0) {
             node_insert_after(head, n);
             node_delete(head);
             return n;
-        } else if ((y1 == y2) && (x1 < x2)) {
-            // do nothing
         } else {
-            float x = cross(*n->p, *head->p, *head->next->p);
-            if (x > 0) {
-                node_insert_after(head->prev, n);
-            } else if (x < 0) {
-                node_insert_after(head, n);
-            } else {
-                node_insert_after(head, n);
-                node_delete(head);
-            }
-            return n;
+            node_insert_after(head, n);
+            return head;
         }
     }
 
-    /* for two nodes already defined */
+    /* Adding third node */
     if (head->next->next == head) {
-        struct node *a = head;
-        struct node *b = head->next;
-        struct node *c = n;
-        float x = cross(*a->p, *b->p, *c->p);
-        // printf("%f\n", x);
+        struct node *n = node_create(p);
+        /* first check to see if we are on top of another node */
+        if (distance(*head->p, *p) == 0.0) {
+            node_insert_after(head, n);
+            node_delete(head);
+            return n;
+        } 
+        if (distance(*head->next->p, *p) == 0.0) {
+            node_insert_after(head->next, n);
+            node_delete(head->next);
+            return head;
+        } 
+
+        /* now check to see where we should place the new node */
+        float x = cross(*head->p, *head->next->p, *p);
         if (x > 0){
             node_insert_after(head->next, n);
         } else if (x < 0) {
@@ -213,58 +194,87 @@ struct node* insert(struct node *head, struct point *p) {
         } else {
             float d1 = distance(*head->p, *head->next->p);
             float d2 = distance(*head->p, *p);
-            // printf("%f, %f\n", d1, d2);
-            if (d1 > d2) {
+            float d3 = distance(*head->next->p, *p);
+            if ((d1 > d2) && (d1 > d3)) {
                 node_delete(n);
-            } else {
+            } else if ((d2 > d1) && (d2 > d3)) {
                 node_insert_after(head->next, n);
                 node_delete(head->next);
+            } else {
+                node_insert_after(head, n);
+                node_delete(head);
+                return n;
             }
         }
         return head;
     }
 
-    /* All other cases*/
-    struct node *cur = head->next->next;
-    while (cur != head) {
-        struct node *prev = cur->prev;
-        float c1 = cross(*head->p, *prev->p, *p);
-        float c2 = cross(*head->p, *cur->p, *p);
-        //printf("%f. %f\n", c1, c2);
-        if (c1 == 0.0 ) {
-            float d1 = distance(*head->p, *prev->p);
-            float d2 = distance(*head->p, *p);
-             if (d1 > d2) {
-                node_delete(n);
-            } else {
-                node_insert_after(prev, n);
-                node_delete(prev);
-            }
-            return head;
-        } else if (c1 < 0) {
-            node_insert_after(head, n);
-            return head;
-        } else if ((c1 > 0) && (c2 < 0)) {
-            node_insert_after(prev, n);
-            return head;
+    /* go around counter clockwise looking for a non-left turn */   
+    struct node *beg = NULL;
+    struct node *end = NULL;
+    struct node *cur = head;
+    do  {
+        float x = cross(*cur->p, *cur->next->p, *p);
+        if (x <= 0.0) {
+            beg = cur;
+            break;
         }
         cur = cur->next;
-    }
-    node_insert_after(cur->prev, n);
-    return head;
-}
+    } while (cur != head);
 
-void reduce(struct node *head) {
-    struct node *c = head->next;
-    while (c != head) {
-        struct node *a = c->prev->prev;
-        struct node *b = c->prev;
-        float x = cross(*a->p, *b->p, *c->p);
-        if (x < 0) {
-            node_delete(b);
-        }
-        c = c->next;
+
+    /* if we didn't find anything then the node is in the interior */
+    if (beg == NULL) {
+        return head;
     }
+
+    /* now go back around clockwise looking for non-right turn */
+    cur = head;
+    do  {
+        float x = cross(*cur->p, *cur->prev->p, *p);
+        if (x >= 0.0) {
+            end = cur;
+            break;
+        }
+        cur = cur->prev;
+    } while (cur != head);
+    assert (end != NULL);
+
+        if (p->idx == 3213) {
+            PRINT_POINT(p);
+            PRINT_POINT(beg->p);
+            PRINT_POINT(end->p);
+            node_print_all(head);
+            exit(1);
+         }
+
+    if (beg == end) {
+        struct node *n = node_create(p);
+        node_insert_after(beg, n);
+        node_delete(beg);
+        return n;
+    }
+
+
+        // if (p->idx == 3213) {
+        //     PRINT_POINT(p);
+        //     PRINT_POINT(beg->p);
+        //     PRINT_POINT(end->p);
+        //     node_print_all(cur);
+        //     exit(1);
+        //  }
+
+    /* delete from beginning to end */
+    cur = beg;
+    while (cur->next != end) {
+         node_delete(cur->next);
+    };
+    node_insert_after(cur, node_create(p));
+    
+
+
+
+    return cur;
 }
 
 int main(int argc, char **argv) {
@@ -297,11 +307,13 @@ int main(int argc, char **argv) {
         DEBUG_PRINT("insert\n");
         head = insert(head, p);
         DEBUG_PRINT("reduce\n");
-        reduce(head);
+        // reduce(head);
         DEBUG_PRINT("COMPLETE\n");
     }
 
     node_print_all(head);
+        node_check(head);
+
 
     return 0;
 }
