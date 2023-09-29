@@ -58,12 +58,12 @@ size_t xgetline(char **lineptr, size_t *n, FILE *stream) {
 
 struct point {
     int idx;
-    float *f;
+    double *f;
     char *line;
     int ref_count;
 };
 
-#define PRINT_POINT(p) printf("%d\t%0.3f\t%0.3f\n", p->idx, p->f[0], p->f[1]);
+#define PRINT_POINT(p) printf("%d\t%0.6lf\t%0.6lf\n", p->idx, p->f[0], p->f[1]);
 
 struct node {
     struct point *p;
@@ -102,7 +102,7 @@ void node_delete(struct node *n) {
     free(n);
 }
 
-void node_insert_after(struct node *this, struct node *new) {
+struct node* node_insert_after(struct node *this, struct node *new) {
     struct node *next = this->next;
     if (this != NULL) {
         this->next = new;
@@ -112,6 +112,7 @@ void node_insert_after(struct node *this, struct node *new) {
     }
     new->prev = this;
     new->next = next;
+    return new;
 }
 
 void node_print_all(struct node *n) {
@@ -125,26 +126,26 @@ void node_print_all(struct node *n) {
     printf("-----\n");
 }
 
-float cross(struct point p0, struct point p1, struct point p2) {
-    float dx1 = p1.f[0] - p0.f[0];
-    float dy1 = p1.f[1] - p0.f[1];
-    float dx2 = p2.f[0] - p0.f[0];
-    float dy2 = p2.f[1] - p0.f[1];
+double cross(struct point p0, struct point p1, struct point p2) {
+    double dx1 = p1.f[0] - p0.f[0];
+    double dy1 = p1.f[1] - p0.f[1];
+    double dx2 = p2.f[0] - p0.f[0];
+    double dy2 = p2.f[1] - p0.f[1];
     return dx1*dy2 - dx2*dy1;
 }
 
 void node_check(struct node *head) {
     struct node *cur = head;
     do {
-        float x = cross(*cur->p, *cur->next->p, *cur->next->next->p);
+        double x = cross(*cur->p, *cur->next->p, *cur->next->next->p);
         assert(x > 0);
         cur = cur->next;
     } while (cur->next == head);
 }
 
-float distance(struct point p1, struct point p2) {
-    float dx = p2.f[0] - p1.f[0];
-    float dy = p2.f[1] - p1.f[1];
+double distance(struct point p1, struct point p2) {
+    double dx = p2.f[0] - p1.f[0];
+    double dy = p2.f[1] - p1.f[1];
     return dx*dx + dy*dy;
 }
 
@@ -171,53 +172,56 @@ struct node* insert(struct node *head, struct point *p) {
     }
 
     /* Adding third node */
-    if (head->next->next == head) {
-        struct node *n = node_create(p);
-        /* first check to see if we are on top of another node */
-        if (distance(*head->p, *p) == 0.0) {
-            node_insert_after(head, n);
-            node_delete(head);
-            return n;
-        } 
-        if (distance(*head->next->p, *p) == 0.0) {
-            node_insert_after(head->next, n);
-            node_delete(head->next);
-            return head;
-        } 
+    // if (head->next->next == head) {
+    //     struct node *n = node_create(p);
+    //     /* first check to see if we are on top of another node */
+    //     if (distance(*head->p, *p) == 0.0) {
+    //         node_insert_after(head, n);
+    //         node_delete(head);
+    //         return n;
+    //     } 
+    //     if (distance(*head->next->p, *p) == 0.0) {
+    //         node_insert_after(head->next, n);
+    //         node_delete(head->next);
+    //         return head;
+    //     } 
 
-        /* now check to see where we should place the new node */
-        float x = cross(*head->p, *head->next->p, *p);
-        if (x > 0){
-            node_insert_after(head->next, n);
-        } else if (x < 0) {
-            node_insert_after(head, n);
-        } else {
-            float d1 = distance(*head->p, *head->next->p);
-            float d2 = distance(*head->p, *p);
-            float d3 = distance(*head->next->p, *p);
-            if ((d1 > d2) && (d1 > d3)) {
-                node_delete(n);
-            } else if ((d2 > d1) && (d2 > d3)) {
-                node_insert_after(head->next, n);
-                node_delete(head->next);
-            } else {
-                node_insert_after(head, n);
-                node_delete(head);
-                return n;
-            }
-        }
-        return head;
-    }
+    //     /* now check to see where we should place the new node */
+    //     double x = cross(*head->p, *head->next->p, *p);
+    //     if (x > 0){
+    //         node_insert_after(head->next, n);
+    //     } else if (x < 0) {
+    //         node_insert_after(head, n);
+    //     } else {
+    //         double d1 = distance(*head->p, *head->next->p);
+    //         double d2 = distance(*head->p, *p);
+    //         double d3 = distance(*head->next->p, *p);
+    //         if ((d1 > d2) && (d1 > d3)) {
+    //             node_delete(n);
+    //         } else if ((d2 > d1) && (d2 > d3)) {
+    //             node_insert_after(head->next, n);
+    //             node_delete(head->next);
+    //         } else {
+    //             node_insert_after(head, n);
+    //             node_delete(head);
+    //             return n;
+    //         }
+    //     }
+    //     return head;
+    // }
 
-    /* go around counter clockwise looking for a non-left turn */   
+    /* go around counter clockwise looking for transition points */   
     struct node *beg = NULL;
     struct node *end = NULL;
     struct node *cur = head;
     do  {
-        float x = cross(*cur->p, *cur->next->p, *p);
-        if (x <= 0.0) {
+        double x1 = cross(*cur->prev->p, *cur->p, *p);
+        double x2 = cross(*cur->p, *cur->next->p, *p);
+
+        if ((x1 > 0.0) && (x2 <= 0.0)) {
             beg = cur;
-            break;
+        } else if ((x1 <= 0.0) && (x2 > 0.0)) {
+            end = cur;           
         }
         cur = cur->next;
     } while (cur != head);
@@ -227,59 +231,24 @@ struct node* insert(struct node *head, struct point *p) {
     if (beg == NULL) {
         return head;
     }
-
-    /* now go back around clockwise looking for non-right turn */
-    cur = head;
-    do  {
-        float x = cross(*cur->p, *cur->prev->p, *p);
-        if (x >= 0.0) {
-            end = cur;
-            break;
-        }
-        cur = cur->prev;
-    } while (cur != head);
-    assert (end != NULL);
-
-        if (p->idx == 3213) {
-            PRINT_POINT(p);
-            PRINT_POINT(beg->p);
-            PRINT_POINT(end->p);
-            node_print_all(head);
-            exit(1);
-         }
-
-    if (beg == end) {
-        struct node *n = node_create(p);
-        node_insert_after(beg, n);
-        node_delete(beg);
-        return n;
-    }
-
-
-        // if (p->idx == 3213) {
-        //     PRINT_POINT(p);
-        //     PRINT_POINT(beg->p);
-        //     PRINT_POINT(end->p);
-        //     node_print_all(cur);
-        //     exit(1);
-        //  }
+    assert(end != NULL);
 
     /* delete from beginning to end */
-    cur = beg;
-    while (cur->next != end) {
-         node_delete(cur->next);
+    while (beg->next != end) {
+         node_delete(beg->next);
     };
-    node_insert_after(cur, node_create(p));
     
+    /* do one last check to see if the final node is in line with the beg & end*/
+    double x = cross(*beg->p, *end->p, *p);
+    if (x == 0.0) {
+        return head;
+    } else {
+        return node_insert_after(beg, node_create(p));
+    }
 
-
-
-    return cur;
 }
 
 int main(int argc, char **argv) {
-    DEBUG_PRINT("START\n");
-
     char *line = NULL;
     size_t n = 0;
     struct node *head = node_create(NULL);
@@ -288,14 +257,14 @@ int main(int argc, char **argv) {
     int index = 1;
     while ((len = xgetline(&line, &n, stdin)) > 0) {
         struct point *p = malloc(sizeof(struct point));
-        p->f = malloc(2 * sizeof(float));
+        p->f = malloc(2 * sizeof(double));
         p->line = malloc(len * sizeof(char));
         p->idx = index++;
         p->ref_count = 0;
         memcpy(p->line, line, len);
 
         DEBUG_PRINT("Reading\n");
-        int count = sscanf(line, "%f,%f", &p->f[0], &p->f[1]);
+        int count = sscanf(line, "%lf,%lf", &p->f[0], &p->f[1]);
         if (count < 2) {
             printf("not enough variables in line\n");
             return 1;

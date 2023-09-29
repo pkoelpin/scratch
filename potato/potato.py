@@ -6,7 +6,7 @@ import glob
 
 infiles = glob.glob("./in/*.txt")
 
-for infile in ['loads_large.txt']:
+for infile in ['loads_test.txt']:
     print(infile)
     error = False
     tmp = []
